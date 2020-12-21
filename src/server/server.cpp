@@ -1,72 +1,13 @@
-#include <iostream>
-#include <memory>
-#include <string>
-#include <vector>
-#include <atomic>
-#include <mutex>
-
-#include "../shared/connection.h"
-
-namespace asio = boost::asio;
-
-struct Client
-{
-    uint32_t id;
-    std::unique_ptr<Connection> connection;
-};
-
-const auto lambda = [](std::vector<char> dVec)
-{
-    for (char c : dVec)
-    {
-        std::cout << c;
-    }
-    std::cout << std::endl;
-};
-
-class Server
-{
-public:
-    asio::io_context ic;
-private:
-    std::vector<Client> clients;
-    std::mutex clientV_mut;
-    uint32_t clCounter = 0;
-    std::thread ic_thread;
-    asio::ip::tcp::acceptor connection_acceptor;
-
-public:
-    Server(uint16_t portNum);
-    ~Server();
-
-    void Stop();
-    void AddConnection(Client client);
-    void AcceptConnections();
-
-    bool SendMessage(std::vector<char> mVec, int clientNum);
-    bool SendMessageAll(std::vector<char> mVec);
-
-};
+#include "server.h"
 
 Server::Server(uint16_t portNum)
     : connection_acceptor(ic, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), portNum))
 {
     std::cout << "Server Started\n";
     AcceptConnections();
-    try
-    {
-        ic_thread = std::thread([this]() {
-            ic.run();
-            });
-    }
-    catch (const boost::system::error_code& ec)
-    {
-        std::cerr << ec.message() << std::endl;
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
+    ic_thread = std::thread([this]() {
+        ic.run();
+        });
 }
 
 void Server::AddConnection(Client cl)
@@ -83,25 +24,17 @@ void Server::AcceptConnections()
 {
     connection_acceptor.async_accept([this](boost::system::error_code ec, asio::ip::tcp::socket _socket)
         {
+            AcceptConnections();
             if (!ec)
             {
+                if (!VerifyConnection(_socket))//Blocking method for verifying connection.
+                    return;
                 std::cout << "Adding Connection to server!" << std::endl;
                 Client client;
                 int cnum = clCounter;
                 clCounter++;
                 client.id = cnum;
-                client.connection = std::make_unique<Connection>(std::move(_socket),
-                    [this, cnum](std::vector<char>&& dVec)
-                    {
-
-                        std::string message("[");
-                        message += std::to_string(cnum);
-                        message += ']';
-                        message.append(dVec.begin(), dVec.end());
-                        std::cout << message << std::endl;
-                        SendMessageAll(std::vector<char>(message.begin(),message.end()));
-                    }
-                , ic);
+                client.connection = std::make_unique<Connection>(std::move(_socket), ic);
                 AddConnection(std::move(client));
             }
             else
@@ -109,8 +42,13 @@ void Server::AcceptConnections()
                 //TODO handle error
                 std::cout << ec.message() << std::endl;
             }
-            AcceptConnections();
         });
+}
+
+bool Server::VerifyConnection(asio::ip::tcp::socket& scoket_)
+{
+    //TODO
+    return true;
 }
 
 void Server::Stop()
@@ -172,16 +110,24 @@ bool Server::SendMessageAll(std::vector<char> mVec)
     return true;
 }
 
-int main()
+bool Server::SendMessageAll(std::vector<char> mVec, int clientId)
 {
-    try
+    clientV_mut.lock();
+
+    std::cout << clients.size() << '\n';
+    for (auto& cl : clients)
     {
-        Server server(30020);
-        std::cin.get();
+        if (cl.id != clientId)
+        {
+            if (cl.connection->isopen())
+            {
+                auto mCopy = mVec;
+                cl.connection->Send(std::move(mCopy));
+            }
+        }
     }
-    catch (const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-    //Server server(30020);
+
+    clientV_mut.unlock();
+    return true;
 }
+

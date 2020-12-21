@@ -1,6 +1,7 @@
 #ifndef TQUEUE
 #define TQUEUE
 
+#include <vector>
 #include <deque>
 #include <mutex>
 
@@ -12,11 +13,11 @@ private:
     std::mutex mut;
 public:
     T_queue() = default;
-    
+
     T pop_front()
     {
         mut.lock();
-        if(deq.size() == 0)
+        if (deq.size() == 0)
         {
             mut.unlock();
             throw "queue is empty!";
@@ -27,18 +28,29 @@ public:
         return temp;
     }
 
-    void push_back(T&& temp)
+    void push_back(T temp)
     {
         mut.lock();
         deq.push_back(std::move(temp));
         mut.unlock();
     }
 
-    void flush()
+    void push_back(std::vector<T> temp)
     {
         mut.lock();
-        deq.clear();
+        for(auto& t : temp)
+        {
+            deq.push_back(std::move(t));
+        }
         mut.unlock();
+    }
+
+    std::deque<T> GetDeque()
+    {
+        mut.lock();
+        auto temp = std::move(deq);
+        mut.unlock();
+        return std::move(temp);
     }
 
     inline size_t size()

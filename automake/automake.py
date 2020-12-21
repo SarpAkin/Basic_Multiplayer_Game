@@ -6,8 +6,8 @@ import json
 ##Configurations
 #valid CPP formats
 cpp_format = [".cpp",".c"]
-compiler = "clang"
-cflags = "-std=c++17 -pthread -lstdc++ -g -lX11 -lGL -lpthread -lpng"
+compiler = "g++"
+cflags = "-lX11 -lGL -pthread -lpthread -lpng -lstdc++fs -std=c++17"
 ##
 
 executable_dir = sys.argv[0]
@@ -35,9 +35,11 @@ def FindAllHeaders(path: str) -> set:
     findex = fdata.find("#include")
     while(findex != -1):
         includeLine = fdata[findex:fdata.find("\n",findex)]
-        psIndex = includeLine.find("\"")
-        if(psIndex != -1):
-            headers.add(filedir + includeLine[psIndex + 1:includeLine.find("\"",psIndex + 1)])
+        if(includeLine[-1] != "/"):
+            psIndex = includeLine.find("\"")
+            if(psIndex != -1):
+                headers.add(filedir + includeLine[psIndex + 1:includeLine.find("\"",psIndex + 1)])
+            
         findex = fdata.find("#include",findex + 1)
     header_headers = set()
     for header in headers:
@@ -110,7 +112,7 @@ obFileStr = ""
 for obf in objectfiles:
     obFileStr += " " + obf
 
-writestr += "\n$(OUT):" + obFileStr + "\n\t$(CC) $(CFLAGS) -o $(OUT) " + obFileStr + "\n\n"
+writestr += "\n$(OUT):" + obFileStr + "\n\t$(CC) -o $(OUT) " + obFileStr + " $(CFLAGS)\n\n"
 writestr += ob_str
 
 

@@ -53,7 +53,8 @@ public:
     ~Connection();
 
     void Stop();
-    void Send(std::vector<char>&& DVec);
+    void Send(std::vector<char> DVec);
+    void Send(std::vector<std::vector<char>> DVec);
 
     //inlines
     inline bool isopen()

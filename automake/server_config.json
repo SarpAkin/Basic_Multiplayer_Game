@@ -1,4 +1,4 @@
 {   
-    "srcdir":["../src/shared","../src/server","../vendor"],
+    "srcdir":["../src/shared","../src/server"],
     "outfile":"server"
 }
