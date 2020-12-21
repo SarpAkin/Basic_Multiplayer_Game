@@ -6,8 +6,8 @@ import json
 ##Configurations
 #valid CPP formats
 cpp_format = [".cpp",".c"]
-compiler = "gcc"
-cflags = "-std=c++17 -pthread -lstdc++ -g"
+compiler = "clang"
+cflags = "-std=c++17 -pthread -lstdc++ -g -lX11 -lGL -lpthread -lpng"
 ##
 
 executable_dir = sys.argv[0]
@@ -116,7 +116,7 @@ writestr += ob_str
 
 mfile = None
 if(len(sys.argv) >= 3):
-    mfile= open(executable_dir + sys.argv[3],"w")
+    mfile= open(executable_dir + sys.argv[2],"w")
 else:
     mfile = open(executable_dir + "makefile","w")
 

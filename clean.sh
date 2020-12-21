@@ -1,2 +1,4 @@
 cd automake
-rm -rf *.o out HeaderFiles.json
+rm -rf *.o HeaderFiles.json
+cd ../build
+rm -rf server client
