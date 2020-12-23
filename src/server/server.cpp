@@ -12,6 +12,8 @@ Server::Server(uint16_t portNum)
 
 void Server::AddConnection(Client cl)
 {
+    NewClients.push_back(cl);
+    
     clientV_mut.lock();
     clients.push_back(std::move(cl));
     clientV_mut.unlock();
@@ -126,4 +128,25 @@ bool Server::SendMessageAll(Message mVec, int clientId)
 
     clientV_mut.unlock();
     return true;
+}
+
+Client Server::GetClient(int clientID)
+{
+    clientV_mut.lock();
+
+    for (auto& cl : clients)
+    {
+        if (cl.id == clientID)
+        {
+            if (cl.connection->isopen())
+            {
+                auto tmp = cl;
+                clientV_mut.unlock();
+                return std::move(tmp);
+            }
+        }
+    }
+
+    clientV_mut.unlock();
+    return Client();
 }

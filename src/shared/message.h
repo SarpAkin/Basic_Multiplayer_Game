@@ -14,9 +14,22 @@ public:
     template <typename T>
     void push_back(T& item)
     {
-        if(std::is_trivially_copyable<T>())
+        if (std::is_trivially_copyable<T>())
         {
-            data.insert(data.end(),(char*)&item,(char*)&item + sizeof(T));
+            data.insert(data.end(), (char*)&item, (char*)&item + sizeof(T));
+        }
+        else
+        {
+            throw std::exception(std::string("This item isn't serializable! ") + typeid(T).name());
+        }
+    }
+
+    template <typename T>
+    void push_back_(T item)
+    {
+        if (std::is_trivially_copyable<T>())
+        {
+            data.insert(data.end(), (char*)&item, (char*)&item + sizeof(T));
         }
         else
         {
@@ -28,11 +41,11 @@ public:
     T pop_front()
     {
         T tmp = *(T*)data.data();
-        data.erase(data.begin(),data.begin() + sizeof(T));
+        data.erase(data.begin(), data.begin() + sizeof(T));
 
         return tmp;
     }
-    
+
 };
 
 #endif

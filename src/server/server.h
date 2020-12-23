@@ -1,5 +1,5 @@
-#ifndef SERVER
-#define SERVER
+#ifndef SERVER_H
+#define SERVER_H
 
 #include <iostream>
 #include <memory>
@@ -29,16 +29,16 @@ const auto lambda = [](std::vector<char> dVec)
 
 class Server
 {
-public:
-    asio::io_context ic;
 private:
+    asio::io_context ic;
     std::vector<Client> clients;
     std::mutex clientV_mut;
     uint32_t clCounter = 0;
     std::thread ic_thread;
     asio::ip::tcp::acceptor connection_acceptor;
-
 public:
+    T_queue<Client> NewClients;
+public://fucntions
     Server(uint16_t portNum);
     ~Server();
 
@@ -49,7 +49,9 @@ public:
 
     bool SendMessage(Message, int clientId);
     bool SendMessageAll(Message mVec);
-    bool SendMessageAll(Message,int clientId);
+    bool SendMessageAll(Message, int clientId);
+
+    Client GetClient(int clientID);
 
 };
 

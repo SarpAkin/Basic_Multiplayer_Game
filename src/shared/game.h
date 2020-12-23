@@ -1,5 +1,5 @@
-#ifndef GAME
-#define GAME
+#ifndef GAME_H
+#define GAME_H
 
 #include <vector>
 #include <memory>
@@ -8,24 +8,21 @@
 #include "message.h"
 #include "entity.h"
 
-enum class Gametype {
-    server, client
-};
 
+//Base Game class of game engine iplementation
 class Game
 {
-private:
-    Gametype type_;
+protected:
     std::map<int,std::unique_ptr<Entity>> Entities;
 
-private://functions
+protected://functions
 
 
     //message Handling
-    void R_EntitySpawned();
+    void R_EntitySpawned(Message m);
     Message S_EntitySpawned(int entityID,Entity& entity);
 
-    void R_EntityMoved();
+    void R_EntityMoved(Message m);
     Message S_EntityMoved(int entityID,Entity& entity);
 
 public:

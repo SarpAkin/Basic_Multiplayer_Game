@@ -1,5 +1,5 @@
-#ifndef MESSAGE_TYPES
-#define MESSAGE_TYPES
+#ifndef MESSAGE_TYPES_H
+#define MESSAGE_TYPES_H
 
 #include "message.h"
 #include "entity.h"
