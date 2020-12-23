@@ -2,10 +2,11 @@
 #define MESSAGE_H
 
 #include <vector>
+#include <iostream>
 
 class Message
 {
-private:
+public:
     std::vector<char> data;
 public:
     Message() = default;
@@ -13,13 +14,13 @@ public:
     template <typename T>
     void push_back(T& item)
     {
-        if(std::is_trivially_copyable<T>)
+        if(std::is_trivially_copyable<T>())
         {
-            data.insert((char*)&item,(char*)&item + sizeof(T));
+            data.insert(data.end(),(char*)&item,(char*)&item + sizeof(T));
         }
         else
         {
-            throw std::exception("This item isn't serializable!");
+            throw std::exception(std::string("This item isn't serializable! ") + typeid(T).name());
         }
     }
 
@@ -28,8 +29,10 @@ public:
     {
         T tmp = *(T*)data.data();
         data.erase(data.begin(),data.begin() + sizeof(T));
+
         return tmp;
     }
+    
 };
 
 #endif

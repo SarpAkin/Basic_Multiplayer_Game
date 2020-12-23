@@ -15,7 +15,7 @@ namespace asio = boost::asio;
 struct Client
 {
     uint32_t id;
-    std::unique_ptr<Connection> connection;
+    std::shared_ptr<Connection> connection;
 };
 
 const auto lambda = [](std::vector<char> dVec)
@@ -47,9 +47,9 @@ public:
     void AcceptConnections();
     bool VerifyConnection(asio::ip::tcp::socket& scoket_);//TODO create a blocking verify connection function
 
-    bool SendMessage(std::vector<char> mVec, int clientId);
-    bool SendMessageAll(std::vector<char> mVec);
-    bool SendMessageAll(std::vector<char> mVec,int clientId);
+    bool SendMessage(Message, int clientId);
+    bool SendMessageAll(Message mVec);
+    bool SendMessageAll(Message,int clientId);
 
 };
 

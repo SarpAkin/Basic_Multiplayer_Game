@@ -10,9 +10,11 @@ class Client
 private:
     asio::io_context ic;
     std::thread ic_thread;
-    std::unique_ptr<Connection> connection;
 
     bool isRunning = true;
+public:
+    std::unique_ptr<Connection> connection;
+
 public:
     void Stop();
 

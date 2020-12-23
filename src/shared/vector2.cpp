@@ -1,6 +1,6 @@
-#include "Vector2.h"
+#include "vector2.h"
 
-#include <math.h>
+#include <cmath>
 
 
 Vector2::Vector2(float x,float y)

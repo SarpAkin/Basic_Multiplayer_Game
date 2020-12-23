@@ -11,6 +11,7 @@
 #include <boost/asio.hpp>
 
 #include "Tsafe_queue.h"
+#include "message.h"
 
 namespace asio = boost::asio;
 
@@ -25,23 +26,21 @@ private:
     std::thread WorkerThread = std::thread([]() {/*do nothing*/});
     asio::io_context* i_cont;
     asio::ip::tcp::socket socket_;
-    std::function<void(std::vector<char>&& dVec)> OnMessageReceive;
+    std::function<void(Message&& dVec)> OnMessageReceive;
 
     bool useQueueOnMessageReceive = true;
     bool isOpen = true;
 
-    T_queue<std::vector<char>> outqueue;
+    T_queue<Message> outqueue;
 
     std::vector<char> readHBuffer = std::vector<char>(sizeof(MHeader));
-    std::vector<char> readBBuffer;
+    Message readBBuffer;
 
     std::vector<char> writeHBuffer = std::vector<char>(sizeof(MHeader));
-    std::vector<char> writeBBuffer;
+    Message writeBBuffer;
 
 public:
-    T_queue<std::vector<char>> inqueue;
-
-
+    T_queue<Message> inqueue;
 
 private:
     void listen();
@@ -49,12 +48,12 @@ private:
 
 public:
     Connection(asio::ip::tcp::socket&& socket__, asio::io_context& ic);
-    Connection(asio::ip::tcp::socket&& socket__, std::function<void(std::vector<char>&& dVec)>, asio::io_context& ic);
+    Connection(asio::ip::tcp::socket&& socket__, std::function<void(Message&& dVec)>, asio::io_context& ic);
     ~Connection();
 
     void Stop();
-    void Send(std::vector<char> DVec);
-    void Send(std::vector<std::vector<char>> DVec);
+    void Send(Message DVec);
+    void Send(std::vector<Message> DVec);
 
     //inlines
     inline bool isopen()

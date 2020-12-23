@@ -8,7 +8,7 @@ Connection::Connection(asio::ip::tcp::socket&& socket__, asio::io_context& ic)
 }
 
 Connection::Connection(asio::ip::tcp::socket&& socket__,
-    std::function<void(std::vector<char>&& dVec)> onMR, asio::io_context& ic)
+    std::function<void(Message&& dVec)> onMR, asio::io_context& ic)
     : socket_(std::move(socket__))
 {
     i_cont = &ic;
@@ -17,7 +17,7 @@ Connection::Connection(asio::ip::tcp::socket&& socket__,
     listen();
 }
 
-void Connection::Send(std::vector<char> DVec)
+void Connection::Send(Message DVec)
 {
     //May require a mutex here
     size_t qsize = outqueue.size();
@@ -38,7 +38,7 @@ void Connection::Send(std::vector<char> DVec)
     }
 }
 
-void Connection::Send(std::vector<std::vector<char>> DVec)
+void Connection::Send(std::vector<Message> DVec)
 {
     //May require a mutex here
     size_t qsize = outqueue.size();
@@ -69,7 +69,7 @@ void Connection::write()
     }
     writeBBuffer = outqueue.pop_front();
     MHeader header;
-    header.DataSize = writeBBuffer.size();
+    header.DataSize = writeBBuffer.data.size();
     writeHBuffer = std::vector<char>((char*)&header, (char*)&header + sizeof(MHeader));
     boost::system::error_code ec;
     socket_.wait(socket_.wait_write);
@@ -81,7 +81,7 @@ void Connection::write()
         return;
     }
     socket_.wait(socket_.wait_write);
-    socket_.write_some(asio::buffer(writeBBuffer), ec);
+    socket_.write_some(asio::buffer(writeBBuffer.data), ec);
     if (ec)
     {
         std::cout << "Some error occured stoping connection. reason :" << ec.message() << '\n';
@@ -105,8 +105,8 @@ void Connection::listen()
             MHeader header = *(MHeader*)(readHBuffer.data());
             if (header.DataSize > 0)
             {
-                readBBuffer = std::vector<char>(header.DataSize, 0);
-                asio::async_read(socket_, asio::buffer(readBBuffer, header.DataSize),
+                readBBuffer.data = std::vector<char>(header.DataSize, 0);
+                asio::async_read(socket_, asio::buffer(readBBuffer.data, header.DataSize),
                     [this](boost::system::error_code ec, std::size_t length)
                     {
                         if (ec)

@@ -14,9 +14,6 @@ void Server::AddConnection(Client cl)
 {
     clientV_mut.lock();
     clients.push_back(std::move(cl));
-    std::string str = "Succesfully Connected To server " + std::to_string(clients.back().id);
-    std::vector<char> dVec(str.begin(), str.end());
-    clients.back().connection.get()->Send(std::move(dVec));
     clientV_mut.unlock();
 }
 
@@ -34,7 +31,7 @@ void Server::AcceptConnections()
                 int cnum = clCounter;
                 clCounter++;
                 client.id = cnum;
-                client.connection = std::make_unique<Connection>(std::move(_socket), ic);
+                client.connection = std::make_shared<Connection>(std::move(_socket), ic);
                 AddConnection(std::move(client));
             }
             else
@@ -71,7 +68,7 @@ Server::~Server()
     Stop();
 }
 
-bool Server::SendMessage(std::vector<char> mVec, int clientId)
+bool Server::SendMessage(Message mVec, int clientId)
 {
     clientV_mut.lock();
 
@@ -92,7 +89,7 @@ bool Server::SendMessage(std::vector<char> mVec, int clientId)
     return false;
 }
 
-bool Server::SendMessageAll(std::vector<char> mVec)
+bool Server::SendMessageAll(Message mVec)
 {
     clientV_mut.lock();
 
@@ -110,7 +107,7 @@ bool Server::SendMessageAll(std::vector<char> mVec)
     return true;
 }
 
-bool Server::SendMessageAll(std::vector<char> mVec, int clientId)
+bool Server::SendMessageAll(Message mVec, int clientId)
 {
     clientV_mut.lock();
 
@@ -130,4 +127,3 @@ bool Server::SendMessageAll(std::vector<char> mVec, int clientId)
     clientV_mut.unlock();
     return true;
 }
-

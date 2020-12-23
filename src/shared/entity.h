@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "Vector2.h"
+#include "vector2.h"
 
 enum class EntityTypes
 {
@@ -24,6 +24,7 @@ protected:
 
 public:
     Transform transform;
+    
 
 public:
     Entity() = default;
