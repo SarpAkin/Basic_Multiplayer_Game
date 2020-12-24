@@ -13,11 +13,19 @@ Renderer::Renderer(C_game* game_)
 bool Renderer::OnUserUpdate(float fElapsedTime)
 {
     //Render
-    for(auto& p : game->Entities)
+    Clear(olc::DARK_BLUE);//Clear Screen
+    //
+    for (auto& p : game->Entities)
     {
         auto& ent = *p.second;
-        DrawRect(0,0,1,1,olc::WHITE);
+        DrawRect(0, 0, 1, 1, olc::WHITE);
     }
     //
     game->tick(fElapsedTime);
+    return true;
+}
+
+bool Renderer::OnUserCreate()
+{
+    return true;
 }

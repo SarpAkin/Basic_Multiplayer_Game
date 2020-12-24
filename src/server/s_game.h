@@ -37,13 +37,15 @@ public:
     void start(uint16_t portNum, bool tickAutomaticly = true);
     void stop();
 
-    void tick(float ElapsedTime);
+    void tick(double ElapsedTime);
 };
 
 //cpp part 
 //TODO move to a cpp file
 
-void S_game::start(uint16_t portNum, bool tickAutomaticly = true)
+#include <chrono>
+
+void S_game::start(uint16_t portNum, bool tickAutomaticly)
 {
     if (isStarted)//Return if it is already started
         return;
@@ -55,10 +57,36 @@ void S_game::start(uint16_t portNum, bool tickAutomaticly = true)
             [this]()
             {
                 OnGameStart();
+                double deltaTime = 0.001f;
+                double CounterF = 0;
+                int CounterT = 0;
+                auto s = std::chrono::steady_clock::now();
                 while (isRunning)
                 {
-                    //TODO Measure last frames duration and input to the next tick call
-                    tick(0.0f);
+                    auto e = s;
+                    s = std::chrono::steady_clock::now();
+
+                    auto dur = s - e;
+                    deltaTime = dur.count();
+                    deltaTime /= 1000000000;
+                    CounterF += deltaTime;
+
+                    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+                    tick(deltaTime);
+
+                    ++CounterT;
+                    if (CounterF >= 1)
+                    {
+                        CounterF -= 1.0f;
+                        std::cout << "Frames rendered " << CounterT << '\n';
+                        CounterT = 0;
+                        
+                        /*for (auto& p : players)
+                        {
+                            p.connection->Send(S_Ping());
+                        }*/
+                    }
                 }
 
             }
@@ -75,7 +103,7 @@ void S_game::stop() // Stops the game engie
     server->Stop();
 }
 
-void S_game::tick(float ElapsedTime)
+void S_game::tick(double ElapsedTime)
 {
     //Read messages and sync the server
 
@@ -110,13 +138,16 @@ void S_game::OnGameStart()
 
 void S_game::OnPlayerJoin(Client player)
 {
+    //std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::cout <<Entities.size() << "Syncinc the new player!\n";
     std::vector<Message> ms;
     ms.reserve(Entities.size());
     for (auto& e : Entities)
     {
-        S_EntitySpawned(e.first, *e.second);
+        ms.push_back(S_EntitySpawned(e.first, *e.second));
     }
-    player.connection->Send(ms);
+    player.connection->Send(S_Ping());
+    player.connection->Send(std::move(ms));
 }
 
 void S_game::SpawnEntity(std::unique_ptr<Entity> e)

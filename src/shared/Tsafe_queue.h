@@ -40,6 +40,7 @@ public:
         mut.lock();
         for(auto& t : temp)
         {
+            std::cout << "ajsjs\n";
             deq.push_back(std::move(t));
         }
         mut.unlock();

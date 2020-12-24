@@ -25,6 +25,10 @@ protected://functions
     void R_EntityMoved(Message m);
     Message S_EntityMoved(int entityID,Entity& entity);
 
+    void R_Ping(Message m);
+    Message S_Ping();
+
+
 public:
     void ProcessMessage(Message message);
 

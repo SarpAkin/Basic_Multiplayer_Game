@@ -1,5 +1,5 @@
-#ifndef CLIENT
-#define CLIENT
+#ifndef CLIENT_h
+#define CLIENT_H
 
 #include <memory>
 
@@ -27,36 +27,6 @@ public:
         return *connection;
     }
 };
-
-Client::Client(uint16_t portNum, const char* ip)
-{
-    auto endpoint = asio::ip::tcp::endpoint(asio::ip::make_address(ip), portNum);
-    asio::ip::tcp::socket socket_(ic);
-    socket_.connect(endpoint);
-    connection = std::make_unique<Connection>(std::move(socket_), ic);
-
-    ic_thread = std::thread(
-        [this]()
-        {
-            ic.run();
-        });
-}
-
-void Client::Stop()
-{
-    if (isRunning)
-    {
-        isRunning = false;
-        ic.stop();
-        connection->Stop();
-        ic_thread.join();
-    }
-}
-
-Client::~Client()
-{
-    Stop();
-}
 
 
 #endif

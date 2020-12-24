@@ -1,7 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "../../vendor/olcPixelGameEngine.h"
+#include "../../vendor/olcPixelGameEngine.h"//
 
 
 class C_game;
@@ -14,6 +14,7 @@ public:
     Renderer(C_game* game_);
 
     bool OnUserUpdate(float fElapsedTime) override;
+    bool OnUserCreate() override;
 };
 
 #endif

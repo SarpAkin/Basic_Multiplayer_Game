@@ -13,7 +13,7 @@ Server::Server(uint16_t portNum)
 void Server::AddConnection(Client cl)
 {
     NewClients.push_back(cl);
-    
+
     clientV_mut.lock();
     clients.push_back(std::move(cl));
     clientV_mut.unlock();
@@ -44,9 +44,24 @@ void Server::AcceptConnections()
         });
 }
 
-bool Server::VerifyConnection(asio::ip::tcp::socket& scoket_)
+bool Server::VerifyConnection(asio::ip::tcp::socket& socket_)
 {
-    //TODO
+    MHeader header;
+    try
+    {
+        socket_.wait(socket_.wait_read);
+        socket_.read_some(asio::buffer(&header, sizeof(MHeader)));
+    }
+    catch (const boost::system::error_code e)
+    {
+        std::cerr << e.message() << '\n';
+        return false;
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return false;
+    }
     return true;
 }
 
