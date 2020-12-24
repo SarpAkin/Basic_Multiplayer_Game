@@ -12,7 +12,7 @@
 //Base Game class of game engine iplementation
 class Game
 {
-protected:
+public:
     std::map<int,std::unique_ptr<Entity>> Entities;
 
 protected://functions

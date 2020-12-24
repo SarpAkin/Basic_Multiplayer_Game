@@ -29,7 +29,7 @@ std::unique_ptr<Entity> Entity::deserialize(Message m)
         break;
 
     default:
-        return std::make_unique<Entity>(nullptr);
+        return std::unique_ptr<Entity>();
         break;
     }
 }

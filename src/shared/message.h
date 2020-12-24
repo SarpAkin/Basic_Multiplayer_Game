@@ -20,7 +20,7 @@ public:
         }
         else
         {
-            throw std::exception(std::string("This item isn't serializable! ") + typeid(T).name());
+            throw std::invalid_argument(std::string("This item isn't serializable! ") + typeid(T).name());
         }
     }
 
@@ -33,7 +33,7 @@ public:
         }
         else
         {
-            throw std::exception(std::string("This item isn't serializable! ") + typeid(T).name());
+            throw std::invalid_argument(std::string("This item isn't serializable! ") + typeid(T).name());
         }
     }
 
