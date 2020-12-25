@@ -22,13 +22,13 @@ void C_game::tick(float ElapsedTime)
 {
     //Read messages and sync with the server
     auto messages = client.connection->inqueue.GetDeque();
-    if(messages.size()>0)
+    if (messages.size() > 0)
     {
         std::cout << messages.size() << '\n';
     }
     for (auto& m : messages)
     {
-        
+
         ProcessMessage(std::move(m));
     }
     //
@@ -54,6 +54,7 @@ void C_game::stop() // Stops the game engie
 {
     if (isStopped)
         return;
+    isStopped = true;
     isRunning = false;
     workerThread.join();
     client.Stop();

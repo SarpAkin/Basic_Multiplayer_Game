@@ -56,7 +56,7 @@ void S_game::start(uint16_t portNum, bool tickAutomaticly)
         workerThread = std::thread(
             [this]()
             {
-                OnGameStart();
+                //OnGameStart();
                 double deltaTime = 0.001f;
                 double CounterF = 0;
                 int CounterT = 0;
@@ -81,14 +81,13 @@ void S_game::start(uint16_t portNum, bool tickAutomaticly)
                         CounterF -= 1.0f;
                         std::cout << "Frames rendered " << CounterT << '\n';
                         CounterT = 0;
-                        
+
                         /*for (auto& p : players)
                         {
                             p.connection->Send(S_Ping());
                         }*/
                     }
                 }
-
             }
         );
     }
@@ -98,9 +97,11 @@ void S_game::stop() // Stops the game engie
 {
     if (isStopped)
         return;
+    isStopped = true;
     isRunning = false;
     workerThread.join();
-    server->Stop();
+    players.clear();
+    server = nullptr;
 }
 
 void S_game::tick(double ElapsedTime)
@@ -122,12 +123,14 @@ void S_game::tick(double ElapsedTime)
     // 
 
     //handle New Players
+
     auto newPlayers = server->NewClients.GetDeque();
     for (auto& np : newPlayers)
     {
         OnPlayerJoin(np);
         players.push_back(std::move(np));
     }
+
     //
 }
 
@@ -139,7 +142,7 @@ void S_game::OnGameStart()
 void S_game::OnPlayerJoin(Client player)
 {
     //std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::cout <<Entities.size() << "Syncinc the new player!\n";
+    std::cout << Entities.size() << "Syncinc the new player!\n";
     std::vector<Message> ms;
     ms.reserve(Entities.size());
     for (auto& e : Entities)

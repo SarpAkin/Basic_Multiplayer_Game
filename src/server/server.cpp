@@ -6,7 +6,14 @@ Server::Server(uint16_t portNum)
     std::cout << "Server Started\n";
     AcceptConnections();
     ic_thread = std::thread([this]() {
-        ic.run();
+        try
+        {
+            ic.run();
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
         });
 }
 
@@ -77,6 +84,7 @@ void Server::Stop()
     clientV_mut.unlock();
     ic.stop();
     ic_thread.join();
+    clients.clear();
     std::cout << "Server Stopped\n";
 }
 
