@@ -17,12 +17,15 @@ Connection::Connection(asio::ip::tcp::socket&& socket__,
     listen();
 }
 
-void Connection::Send(Message DVec)
+bool Connection::Send(Message DVec)
 {
+    if (!isOpen)
+        return false;
     //May require a mutex here
     size_t qsize = outqueue.size();
     outqueue.push_back(std::move(DVec));
     //
+    
     if (qsize == 0)
     {
         WorkerThread.join();
@@ -36,15 +39,20 @@ void Connection::Send(Message DVec)
             }
         );
     }
+
+    return true;
 }
 
-void Connection::Send(std::vector<Message> DVec)
+bool Connection::Send(std::vector<Message> DVec)
 {
+    if (!isOpen)
+        return false;
+
     //May require a mutex here
     size_t qsize = outqueue.size();
     outqueue.push_back(std::move(DVec));
-    
     //
+
     if (qsize == 0)
     {
         WorkerThread.join();
@@ -58,6 +66,8 @@ void Connection::Send(std::vector<Message> DVec)
             }
         );
     }
+
+    return true;
 }
 
 void Connection::write()

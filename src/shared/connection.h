@@ -52,8 +52,8 @@ public:
     ~Connection();
 
     void Stop();
-    void Send(Message DVec);
-    void Send(std::vector<Message> DVec);
+    bool Send(Message DVec);
+    bool Send(std::vector<Message> DVec);
 
     //inlines
     inline bool isopen()

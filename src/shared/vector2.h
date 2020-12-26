@@ -68,20 +68,17 @@ struct AABB
 {
     Vector2 cord;
     Vector2 size;
-    AABB(Vector2 c,Vector2 s)
+    inline AABB(Vector2 c,Vector2 s)
     {
         cord = c;
         size = s;
     }
-    AABB()
-    {
-        
-    }
+    AABB() = default;
     inline Vector2 GetCenterPoint()
     {
         return cord + size / 2;
     }
-    void FixBoundry()
+    inline void FixBoundry()
     {
         if(size.x < 0)
         {

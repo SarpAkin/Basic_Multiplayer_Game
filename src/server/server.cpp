@@ -1,5 +1,7 @@
 #include "server.h"
 
+#include "../shared/welcomeMessage.h"
+
 Server::Server(uint16_t portNum)
     : connection_acceptor(ic, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), portNum))
 {
@@ -37,8 +39,12 @@ void Server::AcceptConnections()
                     return;
                 std::cout << "Adding Connection to server!" << std::endl;
                 Client client;
-                int cnum = clCounter;
-                clCounter++;
+                int cnum = ++clCounter;
+
+                welcomeMessage mes;
+                mes.ClientID = cnum;
+                _socket.write_some(asio::buffer(&mes,sizeof(welcomeMessage)));
+
                 client.id = cnum;
                 client.connection = std::make_shared<Connection>(std::move(_socket), ic);
                 AddConnection(std::move(client));

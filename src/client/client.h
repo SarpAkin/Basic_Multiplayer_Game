@@ -15,6 +15,8 @@ private:
 public:
     std::unique_ptr<Connection> connection;
 
+    int ClientID;
+
 public:
     void Stop();
 

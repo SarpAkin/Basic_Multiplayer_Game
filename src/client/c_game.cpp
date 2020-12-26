@@ -1,5 +1,8 @@
 #include "c_game.h"
 
+
+#include "../shared/message_types.h"
+
 C_game::C_game(uint16_t pNum, const char* ip)
     : client(pNum, ip), renderer(this)
 {
@@ -29,7 +32,7 @@ void C_game::tick(float ElapsedTime)
     for (auto& m : messages)
     {
 
-        ProcessMessage(std::move(m));
+        ProcessMessage(std::move(m), 0);
     }
     //
 
@@ -47,7 +50,7 @@ void C_game::tick(float ElapsedTime)
 
 void C_game::OnGameStart()
 {
-
+    clientID = client.ClientID;
 }
 
 void C_game::stop() // Stops the game engie
@@ -63,4 +66,65 @@ void C_game::stop() // Stops the game engie
 C_game::~C_game()
 {
     stop();
+}
+
+//Messages
+
+void C_game::ProcessCustomMessage(Message m, int ClientID)
+{
+    MessageTypes mt = m.pop_front<MessageTypes>();
+    switch (mt)
+    {
+    case MessageTypes::ReplyEntityRequest:
+        R_ReplyEntityRequest(std::move(m));
+        break;
+
+    default:
+        break;
+    }
+}
+
+Message C_game::S_RequestEntitySpawn(std::unique_ptr<Entity> e, std::function<void(Entity&, int)> lfunc)
+{
+    int replyID = EntityRequestCounter++;
+    EntityRequestFunctions.emplace(replyID, lfunc);
+    Message m;
+    m.push_back_(MessageTypes::RequestEntitySpawn);
+    m.push_back(replyID);
+    e->serialize(m);
+    return std::move(m);
+}
+
+Message C_game::S_PlayerJoined(int playerEntity)
+{
+    Message m;
+    m.push_back_(MessageTypes::PlayerJoined);
+    m.push_back(playerEntity);
+    return std::move(m);
+}
+
+void C_game::R_ReplyEntityRequest(Message m)
+{
+    int ReplyID = m.pop_front<int>();
+    int EntityID = m.pop_front<int>();
+    auto funcit = EntityRequestFunctions.find(ReplyID);
+    if (funcit != EntityRequestFunctions.end())
+    {
+        auto func = funcit->second;
+        EntityRequestFunctions.erase(funcit);
+
+        auto e = Entities.find(EntityID);
+        if (e != Entities.end())
+        {
+            func(*(e->second), e->first);
+        }
+        else
+        {
+            std::cout << "Entity doesn't exist. not executing the function\n";
+        }
+    }
+    else
+    {
+        std::cout << "No function!\n";
+    }
 }

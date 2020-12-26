@@ -19,18 +19,19 @@ protected://functions
 
 
     //message Handling
-    void R_EntitySpawned(Message m);
+    virtual void R_EntitySpawned(Message m,int ClientID);
     Message S_EntitySpawned(int entityID,Entity& entity);
 
-    void R_EntityMoved(Message m);
+    virtual void R_EntityMoved(Message m,int ClientID);
     Message S_EntityMoved(int entityID,Entity& entity);
 
-    void R_Ping(Message m);
+    void R_Ping(Message m,int ClientID);
     Message S_Ping();
 
 
 public:
-    void ProcessMessage(Message message);
+    void ProcessMessage(Message message,int ClientID);
+    virtual void ProcessCustomMessage(Message Message,int ClientID);
 
 };
 

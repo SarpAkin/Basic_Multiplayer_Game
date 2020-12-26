@@ -1,5 +1,6 @@
 #include "client.h"
 
+#include "../shared/welcomeMessage.h"
 
 Client::Client(uint16_t portNum, const char* ip)
 {
@@ -8,7 +9,16 @@ Client::Client(uint16_t portNum, const char* ip)
     socket_.connect(endpoint);
     MHeader header;
     header.DataSize = 0;
+    //Verify Connection
     socket_.write_some(asio::buffer(&header,sizeof(header)));
+
+    //Get ClientNum
+    welcomeMessage wm;
+    socket_.wait(socket_.wait_read);
+    socket_.read_some(asio::buffer(&wm,sizeof(welcomeMessage)));
+    std::cout << wm.ClientID << '\n';
+    ClientID = wm.ClientID;
+
     connection = std::make_unique<Connection>(std::move(socket_), ic);
 
     ic_thread = std::thread(

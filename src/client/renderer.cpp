@@ -12,13 +12,22 @@ Renderer::Renderer(C_game* game_)
 
 bool Renderer::OnUserUpdate(float fElapsedTime)
 {
+    //Set camera cord to the follow entity if it exists.
+    {
+        auto it = game->Entities.find(EntityToFollowID);
+        if (it != game->Entities.end())
+        {
+            CameraCord = it->second->transform.collider.cord;
+        }
+    }
+
     //Render
     Clear(olc::DARK_BLUE);//Clear Screen
     //
     for (auto& p : game->Entities)
     {
         auto& ent = *p.second;
-        DrawRect(0, 0, 1, 1, olc::WHITE);
+        DrawRect(LocalCordToScreen(ent.transform.collider.cord), olc::vi2d(1, 1), olc::WHITE);
     }
     //
     game->tick(fElapsedTime);
@@ -27,5 +36,6 @@ bool Renderer::OnUserUpdate(float fElapsedTime)
 
 bool Renderer::OnUserCreate()
 {
+    pivot = Vector2(ScreenWidth(), ScreenHeight()) / 2;
     return true;
 }

@@ -18,15 +18,6 @@ struct Client
     std::shared_ptr<Connection> connection;
 };
 
-const auto lambda = [](std::vector<char> dVec)
-{
-    for (char c : dVec)
-    {
-        std::cout << c;
-    }
-    std::cout << std::endl;
-};
-
 class Server
 {
 private:
