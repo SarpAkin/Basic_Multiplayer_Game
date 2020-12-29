@@ -5,6 +5,7 @@
 #include <memory>
 #include <map>
 
+#include "message_types.h"
 #include "message.h"
 #include "entity.h"
 
@@ -31,7 +32,7 @@ protected://functions
 
 public:
     void ProcessMessage(Message message,int ClientID);
-    virtual void ProcessCustomMessage(Message Message,int ClientID);
+    virtual void ProcessCustomMessage(Message Message,int ClientID,MessageTypes mt);
 
 };
 

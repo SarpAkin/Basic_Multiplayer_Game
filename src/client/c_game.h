@@ -17,6 +17,7 @@ class C_game : public Game
 private:
     Client client;//Connection to the server
     Renderer renderer;
+    int playerEntityID = -1;
 
     //Creates an empty thread to make it joinable
     std::thread workerThread = std::thread(([]() {/*do nothing*/}));
@@ -38,12 +39,19 @@ protected://functions
     //void ProcessCustomMessage(Message Message, int ClientID) override; 
 
     //Messages
-    void ProcessCustomMessage(Message m, int ClientID) override;
+    void ProcessCustomMessage(Message m, int ClientID,MessageTypes mt) override;
 
     Message S_RequestEntitySpawn(std::unique_ptr<Entity>,std::function<void(Entity&,int)>);
     Message S_PlayerJoined(int);
 
     void R_ReplyEntityRequest(Message m);
+
+    //inilnes
+    inline void setPlayer(int id)
+    {
+        playerEntityID = id;
+        renderer.EntityToFollowID = id;
+    }
 public:
     C_game(uint16_t, const char*);
     ~C_game();

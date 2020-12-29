@@ -12,6 +12,8 @@ Renderer::Renderer(C_game* game_)
 
 bool Renderer::OnUserUpdate(float fElapsedTime)
 {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    
     //Set camera cord to the follow entity if it exists.
     {
         auto it = game->Entities.find(EntityToFollowID);

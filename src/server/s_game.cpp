@@ -37,7 +37,7 @@ void S_game::start(uint16_t portNum, bool tickAutomaticly)
                     if (CounterF >= 1)
                     {
                         CounterF -= 1.0f;
-                        std::cout << "Frames rendered " << CounterT << '\n';
+                        //std::cout << "Frames rendered " << CounterT << '\n';
                         CounterT = 0;
 
                         /*for (auto& p : players)
@@ -60,12 +60,20 @@ void S_game::stop() // Stops the game engie
     workerThread.join();
     players.clear();
     server = nullptr;
+    std::cout << "Stopped server\n";
 }
 
 void S_game::tick(double ElapsedTime)
 {
     //Read messages and sync the server
-
+    for (auto& p : players)
+    {
+        auto messages = p.connection->inqueue.GetDeque();
+        for (auto& m : messages)
+        {
+            ProcessMessage(std::move(m), p.id);
+        }
+    }
 
     //
 
@@ -102,13 +110,16 @@ void S_game::tick(double ElapsedTime)
 
 void S_game::OnGameStart()
 {
-    SpawnEntity(std::make_unique<Entity>());
+
 }
 
 void S_game::OnPlayerJoin(Client player)
 {
     //std::this_thread::sleep_for(std::chrono::seconds(1));
     std::cout << Entities.size() << "Syncinc the new player!\n";
+
+    player.connection->Send(S_Ping());
+
     std::vector<Message> ms;
     ms.reserve(Entities.size());
     for (auto& e : Entities)
@@ -121,7 +132,7 @@ void S_game::OnPlayerJoin(Client player)
 int S_game::SpawnEntity(std::unique_ptr<Entity> e)
 {
     int id = EntityCounter++;
-    S_EntitySpawned(id, *e);//unfinihed
+    SendMessageAll(S_EntitySpawned(id, *e));
     Entities.emplace(id, std::move(e));
     return id;
 }
@@ -129,9 +140,9 @@ int S_game::SpawnEntity(std::unique_ptr<Entity> e)
 void S_game::SendMessageAll(Message m, int pID)
 {
     //TODO erase if it returns false
-    for(auto& p : players)
+    for (auto& p : players)
     {
-        if(p.id != pID)
+        if (p.id != pID)
         {
             p.connection->Send(m);
         }
@@ -145,9 +156,9 @@ S_game::~S_game()
 
 //Messages
 
-void S_game::ProcessCustomMessage(Message m, int ClientID)
+void S_game::ProcessCustomMessage(Message m, int ClientID, MessageTypes mt)
 {
-    MessageTypes mt = m.pop_front<MessageTypes>();
+    //MessageTypes mt = m.pop_front<MessageTypes>();
     switch (mt)
     {
     case MessageTypes::RequestEntitySpawn:
@@ -165,17 +176,18 @@ void S_game::ProcessCustomMessage(Message m, int ClientID)
 
 void S_game::R_RequestEntitySpawn(Message m, int ClientID)
 {
+    std::cout << "received\n";
     auto ReplyID = m.pop_front<int>();
     auto e = Entity::deserialize(std::move(m));
     int Eid = SpawnEntity(std::move(e));
     auto p = findPlayer(ClientID);
-    if(p)
+    if (p)
     {
-        p->Send(S_ReplyEntityRequest(ReplyID,Eid));
+        p->Send(S_ReplyEntityRequest(ReplyID, Eid));
     }
 }
 
-Message S_game::S_ReplyEntityRequest(int ReplyID,int EntityID)
+Message S_game::S_ReplyEntityRequest(int ReplyID, int EntityID)
 {
     Message m;
     m.push_back_(MessageTypes::ReplyEntityRequest);
@@ -202,13 +214,18 @@ void S_game::R_EntitySpawned(Message m, int ClientID)
 
 void S_game::R_EntityMoved(Message m, int ClientID)
 {
-    //send to other players
-    SendMessageAll(m,ClientID);
-    //
 
     int EntityID = m.pop_front<int>();
     auto transform = m.pop_front<Transform>();
     auto e = Entities.find(EntityID);
-    e->second->transform = transform;
 
+    if (e != Entities.end())
+    {
+        auto entity = *(e->second);
+        entity.transform = transform;
+
+        //send to other players
+        SendMessageAll(S_EntityMoved(EntityID, entity), ClientID);
+    }
+    //
 }

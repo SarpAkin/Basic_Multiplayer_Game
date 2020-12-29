@@ -16,7 +16,7 @@ Client::Client(uint16_t portNum, const char* ip)
     welcomeMessage wm;
     socket_.wait(socket_.wait_read);
     socket_.read_some(asio::buffer(&wm,sizeof(welcomeMessage)));
-    std::cout << wm.ClientID << '\n';
+    std::cout << "Client id: " << wm.ClientID << '\n';
     ClientID = wm.ClientID;
 
     connection = std::make_unique<Connection>(std::move(socket_), ic);

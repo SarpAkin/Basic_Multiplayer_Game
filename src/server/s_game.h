@@ -36,7 +36,7 @@ protected:
     void OnPlayerJoin(Client player);//Called When a player joins 
 
     //Messages
-    void ProcessCustomMessage(Message Message, int ClientID) override;
+    void ProcessCustomMessage(Message Message, int ClientID,MessageTypes) override;
 
     void R_RequestEntitySpawn(Message, int);
     void R_PlayerJoined(Message, int);

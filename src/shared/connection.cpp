@@ -125,7 +125,6 @@ void Connection::listen()
                             std::cout << "Stopping connection due to " << ec.message() << std::endl;
                             return;
                         }
-                        std::cout << "Received message!\n";
                         if (useQueueOnMessageReceive)
                         {
                             inqueue.push_back(std::move(readBBuffer));

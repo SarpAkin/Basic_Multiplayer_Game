@@ -15,10 +15,11 @@ class Renderer : public olc::PixelGameEngine
 private:
     C_game* game;
 
-    int EntityToFollowID = -1;
     Vector2 CameraCord;
     Vector2 pivot;
     float TileSize = 32.0f;
+public:
+    int EntityToFollowID = -1;
 public:
     Renderer(C_game* game_);
 
