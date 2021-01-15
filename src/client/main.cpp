@@ -11,7 +11,6 @@ int main()
     catch (const boost::system::error_code e)
     {
         std::cerr << e.message() << '\n';
-        return false;
     }
     catch (const std::exception& e)
     {

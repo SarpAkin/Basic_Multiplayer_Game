@@ -221,7 +221,7 @@ void S_game::R_EntityMoved(Message m, int ClientID)
 
     if (e != Entities.end())
     {
-        auto entity = *(e->second);
+        auto& entity = *(e->second);
         entity.transform = transform;
 
         //send to other players

@@ -1,4 +1,4 @@
-#ifndef CLIENT_h
+#ifndef CLIENT_H
 #define CLIENT_H
 
 #include <memory>

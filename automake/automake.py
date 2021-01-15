@@ -6,8 +6,8 @@ import json
 ##Configurations
 #valid CPP formats
 cpp_format = [".cpp",".c"]
-compiler = "g++"
-cflags = "-lX11 -lGL -pthread -lpthread -lpng -lstdc++fs -std=c++17 -lm -fPIE -g"
+compiler = "gcc"
+cflags = "-lX11 -lGL -pthread -lpthread -lpng -lstdc++fs -lstdc++ -std=c++17 -lm -g"
 ##
 
 executable_dir = sys.argv[0]

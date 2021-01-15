@@ -92,7 +92,7 @@ void C_game::MovePlayer(Entity& player)
     }
     else
     {
-        player.transform.velocity.x = 0;
+        player.transform.velocity.y = 0;
     }
 }
 
