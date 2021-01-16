@@ -1,4 +1,5 @@
 #ignore all object files
 **.o
 #ignore .vscode
-/.vscode
+.vscode
+**__pycache__

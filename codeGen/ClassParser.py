@@ -55,7 +55,7 @@ class CPP_var:
         splitted = data.rsplit(" ", 1)
 
         if(len(splitted) != 2):
-            #print("invalid variable")
+            # print("invalid variable")
             # print(splitted)
             return
 
@@ -69,12 +69,22 @@ generatedField_TagE = TurnTotag("GeneratedField END")
 
 class CPP_class:
     typename: str
+    inherited: list
     variables: list
     raw: str
     generated: str
 
     def __init__(self, typename: str, data: str):
-        self.typename = typename
+        #
+        self.inherited = list()
+        splitted_ = typename.split(":")
+        self.typename = splitted_[0].strip()
+        if(len(splitted_) >= 2):
+            self.inherited = splitted_[1].split(",")
+            for i in range(0, len(self.inherited)):
+                self.inherited[i] = self.inherited[i].strip()
+        self.generated = ""
+        #
         self.raw = data
         b: int = data.find(generatedField_TagS)
 
@@ -118,7 +128,7 @@ class CPP_class:
                 tag = data[data.find("{", tagFStart) +
                            1:data.find("]", tagFStart)]
                 tag_ = TurnTotag(tag)
-                semic = data.find(";",tagFStart)
+                semic = data.find(";", tagFStart)
                 endTag = TurnTotag(tag + "}")
                 while(semic < data.find(endTag)):
                     if(semic != -1):
@@ -181,13 +191,17 @@ def ParseClass(headerPath: str, sourcepath: str, func):
     classIndex = header.find("class")
     while(classIndex != -1):
         openbrac = header.find("{", classIndex)
+        semic = header.find(";", classIndex)
+        if(openbrac > semic and semic != -1):
+            classIndex = header.find("class",semic)
+            continue
         className = header[header.find(" ", classIndex):openbrac - 1].strip()
         closeBrac = findEnd(header, openbrac, "{", "}")
         # Construct the class
         class_ = CPP_class(className, header[openbrac + 1:closeBrac - 1])
 
         # Execute the custom function
-        srcGenerated += func(class_)
+        srcGenerated += func(class_,headerPath)
 
         # replace the class
         header = header[0:openbrac + 1] + \
@@ -199,13 +213,17 @@ def ParseClass(headerPath: str, sourcepath: str, func):
     classIndex = header.find("struct")
     while(classIndex != -1):
         openbrac = header.find("{", classIndex)
+        semic = header.find(";", classIndex)
+        if(openbrac > semic and semic != -1):
+            classIndex = header.find("class",semic)
+            continue
         className = header[header.find(" ", classIndex):openbrac - 1].strip()
         closeBrac = findEnd(header, openbrac, "{", "}")
         # Construct the class
         class_ = CPP_class(className, header[openbrac + 1:closeBrac - 1])
 
         # Execute the custom function
-        srcGenerated += func(class_)
+        srcGenerated += func(class_,headerPath)
 
         # replace the class
         header = header[0:openbrac] + \
@@ -229,7 +247,7 @@ def ParseClass(headerPath: str, sourcepath: str, func):
 
 
 # Example function which is passes to parser and called when a class is parsed
-def ExFunc(class_: CPP_class) -> str:
+def ExFunc(class_: CPP_class,header_dir:str) -> str:
     # Code goes here
 
     #

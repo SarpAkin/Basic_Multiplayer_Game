@@ -1,0 +1,1 @@
+#include "TestCompenent.h"

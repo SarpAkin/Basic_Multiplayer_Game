@@ -8,8 +8,8 @@
 #include "message.h"
 #include "vector2.h"
 
-#include "EntityCompenents/compenent.h"
-
+//#include "EntityCompenents/compenent.h"
+class Compenent;
 
 struct Transform
 {
@@ -31,7 +31,7 @@ public:
     //Compenent related
     
     template<typename T>
-    T* getCompenent()
+    T& getCompenent()//returns the spesified compenent if it doesn't exist creates one and returns it
     {
         static_assert(std::is_base_of<Compenent,T>::value,"Not a compenent!\n");
         for(auto& c : compenents)
@@ -42,9 +42,11 @@ public:
                 return *comp;
             }
         }
-        return nullptr;
+        compenents.push_back(std::make_unique<T>(this));
+        return *compenents.back();
     }
 
+    /*
     template<typename T>
     T* addCompenent()
     {
@@ -59,6 +61,7 @@ public:
         compenents.push_back(tmp);
         return tmp_;
     }
+    */
     //
 
     void serialize(Message&);
