@@ -1,5 +1,10 @@
 #include "TestCompenent.h"
 
+void TestCompenent::Start()
+{
+	
+}
+
 /*[GeneratedField START]*/
 void TestCompenent::Serialize(Message& m)
 {
@@ -12,5 +17,11 @@ void TestCompenent::Deserialize(Message& m)
 {
 	f = m.pop_front<float>();
 	i = m.pop_front<int>();
+}
+
+TestCompenent::TestCompenent(Entity* e)
+ : Compenent::Compenent(e)
+{
+	Start();
 }
 /*[GeneratedField END]*/

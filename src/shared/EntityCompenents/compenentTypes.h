@@ -4,5 +4,5 @@
 enum class compenentTypes
 {
 TestCompenent_,
-}
+};
 #endif

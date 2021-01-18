@@ -80,6 +80,9 @@ class CPP_class:
         splitted_ = typename.split(":")
         self.typename = splitted_[0].strip()
         if(len(splitted_) >= 2):
+            splitted_[1] = splitted_[1].replace("protected ","")
+            splitted_[1] = splitted_[1].replace("private ","")
+            splitted_[1] = splitted_[1].replace("public ","")
             self.inherited = splitted_[1].split(",")
             for i in range(0, len(self.inherited)):
                 self.inherited[i] = self.inherited[i].strip()
@@ -98,8 +101,7 @@ class CPP_class:
         while(True):
             comment = data.find("//")
             if(comment != -1):
-                data = data[0:comment] + \
-                    data[data.find("\n") + len("\n"):len(data)]
+                data = data[:comment] + data[data.find("\n",comment):]
             else:
                 break
 
@@ -252,3 +254,4 @@ def ExFunc(class_: CPP_class,header_dir:str) -> str:
 
     #
     return ""  # return the generated body part or empty string
+

@@ -3,3 +3,4 @@
 #ignore .vscode
 .vscode
 **__pycache__
+**.log

@@ -7,9 +7,9 @@
 
 #include "message.h"
 #include "vector2.h"
+#include "dynamic_ptr_cast.h"
 
-//#include "EntityCompenents/compenent.h"
-class Compenent;
+#include "EntityCompenents/compenent.h"
 
 struct Transform
 {
@@ -20,7 +20,7 @@ struct Transform
 class Entity//base 
 {
 private:
-    std::vector<std::unique_ptr<int>> compenents;
+    std::vector<std::unique_ptr<Compenent>> compenents;
 public:
     Transform transform;//Transform is also serialized
 
@@ -42,8 +42,10 @@ public:
                 return *comp;
             }
         }
-        compenents.push_back(std::make_unique<T>(this));
-        return *compenents.back();
+        std::unique_ptr<T> tmp = std::make_unique<T>(this);
+        T& tmp_ = *tmp;
+        compenents.push_back(dynamic_ptr_cast<Compenent>(std::move(tmp)));
+        return tmp_;
     }
 
     /*

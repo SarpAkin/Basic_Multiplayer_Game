@@ -19,7 +19,7 @@ def findInDir(path: str):
     for file in files:
         fileDir: str = path + "/" + file
         if(os.path.isdir(executable_dir + fileDir)):
-            findInDir(fileDir)
+            cpp_files = cpp_files + findInDir(fileDir)
         for _format in cpp_format:
             if(os.path.isfile(executable_dir + fileDir)):
                 file_format = fileDir[-len(_format):len(fileDir)]

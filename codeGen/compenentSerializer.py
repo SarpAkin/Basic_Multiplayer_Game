@@ -39,16 +39,17 @@ def compenentSerilizer(class_,headerPath) -> str:
         return ""
     
     c_h = headerPath.replace(executable_dir + compenent_dir + "/","")
-    print(c_h)
     global all_compenents_include
     all_compenents_include += f"#include \"{c_h}\"\n"
 
     #append the compenend names which will later be used to construct a enum
     compenent_names.append(class_.typename)
     
-    class_.generated += "public:"
-    class_.generated += "\n\tvoid Serialize(Message&);"
-    class_.generated += "\n\tvoid Deserialize(Message&);"
+    class_.generated += f"\npublic:"
+    class_.generated += f"\n\t{class_.typename}(Entity*);"
+    class_.generated += f"\n\tvoid Serialize(Message&) override;"
+    class_.generated += f"\n\tvoid Deserialize(Message&);"
+    class_.generated += f"\n\tvoid Start();"
     class_.generated += "\n"
 
 
@@ -78,6 +79,11 @@ def compenentSerilizer(class_,headerPath) -> str:
     srcGenerated += "\n}\n"
     ##
 
+    srcGenerated += f"\n{class_.typename}::{class_.typename}(Entity* e)"
+    srcGenerated += f"\n : {class_.inherited[0]}::{class_.inherited[0]}(e)" + "\n{"
+    srcGenerated += f"\n\tStart();"
+    srcGenerated += "\n}\n"
+
     return srcGenerated  # return the generated body part or empty string
 
 
@@ -96,19 +102,18 @@ compenent_Types_enum = "#ifndef COMPENENT_TYPES_H\n#define COMPENENT_TYPES_H\n\n
 compenent_Types_enum += f"enum class {enum_name}" + "\n{\n"
 for cname in compenent_names:
     compenent_Types_enum += f"{cname}_,\n"
-compenent_Types_enum += "}\n#endif"
+compenent_Types_enum += "};\n#endif"
 open(executable_dir + compenent_dir + "/compenentTypes.h","w").write(compenent_Types_enum)
 
 open(executable_dir + compenent_dir + "/allCompenent.h","w").write(all_compenents_include)
 
 def baseCompFunc(class_,h__) -> str:
-    print(class_.typename)
     if class_.typename != base_compenent:
         return ""
     
-    class_.generated += "public:"
+    class_.generated += "\npublic:"
     class_.generated += f"\n\tstatic void SerializeAll(std::vector<std::unique_ptr<{base_compenent}>>&,Message&);"
-    class_.generated += "\n\tstatic void DeserializeAll(Entity*,Message&);"
+    class_.generated += "\n\tstatic void DeserializeAll(Entity*,Message&)\n;"
 
     srcGenerated = ""
 
@@ -133,7 +138,7 @@ def baseCompFunc(class_,h__) -> str:
 
     srcGenerated += "\n\t\t}"
     srcGenerated += "\n\t}"
-    srcGenerated += "\n}"
+    srcGenerated += "\n}\n"
 
     return srcGenerated
 

@@ -13,7 +13,7 @@ class Entity;
 class Compenent
 {
     friend Entity;
-
+    //aaa
 protected:
     Entity* entity;
 
@@ -23,9 +23,11 @@ public:
     virtual void Update();
     virtual void Serialize(Message&);
 
-/*[GeneratedField START]*/public:
+/*[GeneratedField START]*/
+public:
 	static void SerializeAll(std::vector<std::unique_ptr<Compenent>>&,Message&);
-	static void DeserializeAll(Entity*,Message&);/*[GeneratedField END]*/
+	static void DeserializeAll(Entity*,Message&)
+;/*[GeneratedField END]*/
 };
 
 #endif

@@ -8,6 +8,11 @@ Compenent::Compenent(Entity* e)
     entity = e;
 }
 
+void Compenent::Update()
+{
+	
+}
+
 void Compenent::Serialize(Message& m)
 {
 
@@ -35,4 +40,5 @@ void Compenent::DeserializeAll(Entity* e,Message& m)
 			break;
 		}
 	}
-}/*[GeneratedField END]*/
+}
+/*[GeneratedField END]*/

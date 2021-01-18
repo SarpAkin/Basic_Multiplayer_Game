@@ -1,6 +1,9 @@
+#ifndef TCOMP
+#define TCOMP
+
 #include "compenent.h"
 
-class TestCompenent : Compenent
+class TestCompenent : public Compenent
 {
     private:
     /*[{serializeable]*/
@@ -8,7 +11,13 @@ class TestCompenent : Compenent
     int i;
 
     /*[serializeable}]*/
-/*[GeneratedField START]*/public:
-	void Serialize(Message&);
+/*[GeneratedField START]*/
+public:
+	TestCompenent(Entity*);
+	void Serialize(Message&) override;
 	void Deserialize(Message&);
-/*[GeneratedField END]*/};
+	void Start();
+/*[GeneratedField END]*/
+};
+
+#endif
