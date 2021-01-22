@@ -67,6 +67,7 @@ public:
     //
 
     void serialize(Message&);
+    void Deserialize(Message&);
     Entity(Message&);//desarialize constructor
 
     static std::unique_ptr<Entity> deserialize(Message);

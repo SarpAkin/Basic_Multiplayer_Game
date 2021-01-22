@@ -211,13 +211,13 @@ def ParseClass(headerPath: str, sourcepath: str, func):
 
         classIndex = header.find("class", closeBrac)
 
-    # Same code but for struct
+    #same code but for struct
     classIndex = header.find("struct")
     while(classIndex != -1):
         openbrac = header.find("{", classIndex)
         semic = header.find(";", classIndex)
         if(openbrac > semic and semic != -1):
-            classIndex = header.find("class",semic)
+            classIndex = header.find("struct",semic)
             continue
         className = header[header.find(" ", classIndex):openbrac - 1].strip()
         closeBrac = findEnd(header, openbrac, "{", "}")
@@ -228,8 +228,8 @@ def ParseClass(headerPath: str, sourcepath: str, func):
         srcGenerated += func(class_,headerPath)
 
         # replace the class
-        header = header[0:openbrac] + \
-            class_.GetString() + header[closeBrac:len(header)]
+        header = header[0:openbrac + 1] + \
+            class_.GetString() + header[closeBrac - 1:len(header)]
 
         classIndex = header.find("struct", closeBrac)
 

@@ -7,7 +7,15 @@ void Entity::serialize(Message& m)
 {
     m.push_back(transform);
     //do it last
-    //Compenent::SerializeAll(c,m);
+    Compenent::SerializeAll(compenents,m);
+
+}
+
+void Entity::Deserialize(Message& m)
+{
+    transform = m.pop_front<Transform>();
+    //do it last
+    Compenent::DeserializeAll(this,m);
 
 }
 

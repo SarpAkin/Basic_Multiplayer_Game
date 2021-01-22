@@ -29,6 +29,9 @@ protected://functions
     void R_Ping(Message m,int ClientID);
     Message S_Ping();
 
+    void R_EntityUpdate(Message m,int ClientID);
+    Message S_EntityUpdate(int entityID,Entity& entity);
+
 
 public:
     void ProcessMessage(Message message,int ClientID);

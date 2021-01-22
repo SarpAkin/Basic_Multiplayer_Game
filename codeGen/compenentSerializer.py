@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import ClassParser
 
 compenent_dir = "../src/shared/EntityCompenents"
@@ -28,14 +29,30 @@ def findInDir(path: str):
                     h_files.append(fileDir)
     return h_files
 
+compenent_cache = executable_dir + "compenents.json"
+
 compenent_names = list()
+compenent_names_ = list()
+try:
+    compenent_names_ = json.load(open(compenent_cache))["compenents"]
+except:
+    print("couldn't open json file")
 
 all_compenents_include = ""
+
+def check_intersect(a:list,b:list) -> bool:
+    
+    for a_ in a:
+        if a_ in b:
+            return True
+    return False
 
 # Example function which is passes to parser and called when a class is parsed
 def compenentSerilizer(class_,headerPath) -> str:
     # Return if the class isn't inherited form Compenent
-    if( not (base_compenent in class_.inherited)):
+    #if( not (base_compenent in class_.inherited)):
+    #    return ""
+    if not (check_intersect(compenent_names_,class_.inherited) or class_.typename == base_compenent):
         return ""
     
     c_h = headerPath.replace(executable_dir + compenent_dir + "/","")
@@ -45,9 +62,12 @@ def compenentSerilizer(class_,headerPath) -> str:
     #append the compenend names which will later be used to construct a enum
     compenent_names.append(class_.typename)
     
+    class_.generated += f"\nprotected:"
+    class_.generated += f"\n\tvoid Serialize_(Message&);"
     class_.generated += f"\npublic:"
-    class_.generated += f"\n\t{class_.typename}(Entity*);"
-    class_.generated += f"\n\tvoid Serialize(Message&) override;"
+    if class_.typename != base_compenent:
+        class_.generated += f"\n\t{class_.typename}(Entity*);"
+        class_.generated += f"\n\tvoid Serialize(Message&) override;"
     class_.generated += f"\n\tvoid Deserialize(Message&);"
     class_.generated += f"\n\tvoid Start();"
     class_.generated += "\n"
@@ -62,10 +82,21 @@ def compenentSerilizer(class_,headerPath) -> str:
             serializeable.append(f)
     ##
     srcGenerated = ""
-    ##Serialization     
+
+    ##Serialization
     srcGenerated += f"\nvoid {class_.typename}::Serialize(Message& m)\n" + "{"
 
     srcGenerated += f"\n\tm.push_back_({enum_name}::{class_.typename}_);"
+    srcGenerated += f"\n\tSerialize_(m);"
+    srcGenerated += "\n}\n"
+    ##
+
+    ##Serialization_
+    srcGenerated += f"\nvoid {class_.typename}::Serialize_(Message& m)\n" + "{"
+
+    #srcGenerated += f"\n\tm.push_back_({enum_name}::{class_.typename}_);"
+    if class_.typename != base_compenent:
+        srcGenerated += f"\n\t{class_.inherited[0]}::Serialize_(m);"
     for f in serializeable:
         srcGenerated += f"\n\tm.push_back({f.variablename});"
     srcGenerated += "\n}\n"
@@ -73,14 +104,20 @@ def compenentSerilizer(class_,headerPath) -> str:
 
     ##Deserialization
     srcGenerated += f"\nvoid {class_.typename}::Deserialize(Message& m)\n" + "{"
-
+    if class_.typename != base_compenent:
+        srcGenerated += f"\n\t{class_.inherited[0]}::Deserialize(m);"
     for f in serializeable:
-        srcGenerated += f"\n\t{f.variablename} = m.pop_front<{f.typename}>();"
+        srcGenerated += f"\n\tm.pop_front({f.variablename});"
     srcGenerated += "\n}\n"
     ##
 
     srcGenerated += f"\n{class_.typename}::{class_.typename}(Entity* e)"
-    srcGenerated += f"\n : {class_.inherited[0]}::{class_.inherited[0]}(e)" + "\n{"
+
+    if class_.typename != base_compenent:
+        srcGenerated += f"\n : {class_.inherited[0]}::{class_.inherited[0]}(e)" 
+    srcGenerated +=  "\n{"
+    if class_.typename != base_compenent:
+        srcGenerated += "\n\tentity = e;"
     srcGenerated += f"\n\tStart();"
     srcGenerated += "\n}\n"
 
@@ -112,23 +149,28 @@ def baseCompFunc(class_,h__) -> str:
         return ""
     
     class_.generated += "\npublic:"
-    class_.generated += f"\n\tstatic void SerializeAll(std::vector<std::unique_ptr<{base_compenent}>>&,Message&);"
-    class_.generated += "\n\tstatic void DeserializeAll(Entity*,Message&)\n;"
+    #class_.generated += f"\n\tstatic void SerializeAll(std::vector<std::unique_ptr<{base_compenent}>>&,Message&);"
+    class_.generated += "\n\tstatic void DeserializeAll(Entity*,Message&);\n"
 
-    srcGenerated = ""
+    srcGenerated = compenentSerilizer(class_,h__)
+    compenent_names.pop()#remove the duplicate which is created at the previous line
 
+    """
     #Serialize
     srcGenerated += f"\nvoid {base_compenent}::SerializeAll(std::vector<std::unique_ptr<{base_compenent}>>& comps,Message& m)" + "\n{"
     srcGenerated += "\n\tfor(auto& comp : comps)"
     srcGenerated += "\n\t\tcomp->Serialize(m);"
     srcGenerated += "\n}\n"
+    """
 
     #Deserialize
     srcGenerated += f"\nvoid {base_compenent}::DeserializeAll(Entity* e,Message& m)" + "\n{"
-    srcGenerated += f"\n\twhile(m.data.size() >= sizeof({enum_name}))" + "\n\t{"
+    srcGenerated += f"\n\twhile(m.size() >= sizeof({enum_name}))" + "\n\t{"
     srcGenerated += f"\n\t\tauto compType = m.pop_front<{enum_name}>();"
     srcGenerated += f"\n\t\tswitch(compType)" + "\n\t\t{"
     for c_name in compenent_names:
+        if c_name == base_compenent:
+            continue
         srcGenerated += f"\n\t\t\tcase {enum_name}::{c_name}_:"
         srcGenerated += f"\n\t\t\te->getCompenent<{c_name}>().Deserialize(m);"
         srcGenerated += f"\n\t\t\tbreak;\n"
@@ -144,3 +186,6 @@ def baseCompFunc(class_,h__) -> str:
 
 source_file = base_compenent_dir[:base_compenent_dir.rfind(".")] + ".cpp"
 ClassParser.ParseClass(base_compenent_dir,source_file,baseCompFunc)
+d = dict()
+d["compenents"] = compenent_names
+json.dump(d,open(compenent_cache,"w"))

@@ -79,7 +79,7 @@ void Connection::write()
     }
     writeBBuffer = outqueue.pop_front();
     MHeader header;
-    header.DataSize = writeBBuffer.data.size();
+    header.DataSize = writeBBuffer.size();
     writeHBuffer = std::vector<char>((char*)&header, (char*)&header + sizeof(MHeader));
     boost::system::error_code ec;
     socket_.wait(socket_.wait_write);
@@ -91,7 +91,7 @@ void Connection::write()
         return;
     }
     socket_.wait(socket_.wait_write);
-    socket_.write_some(asio::buffer(writeBBuffer.data), ec);
+    socket_.write_some(asio::buffer(writeBBuffer.data()), ec);
     if (ec)
     {
         std::cout << "Some error occured stoping connection. reason :" << ec.message() << '\n';
@@ -115,8 +115,8 @@ void Connection::listen()
             MHeader header = *(MHeader*)(readHBuffer.data());
             if (header.DataSize > 0)
             {
-                readBBuffer.data = std::vector<char>(header.DataSize, 0);
-                asio::async_read(socket_, asio::buffer(readBBuffer.data, header.DataSize),
+                readBBuffer.data() = std::vector<char>(header.DataSize, 0);
+                asio::async_read(socket_, asio::buffer(readBBuffer.data(), header.DataSize),
                     [this](boost::system::error_code ec, std::size_t length)
                     {
                         if (ec)

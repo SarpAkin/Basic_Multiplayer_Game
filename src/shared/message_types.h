@@ -4,7 +4,7 @@
 
 enum class MessageTypes
 {
-    EntitySpwaned,EntityMoved,Ping,RequestEntitySpawn,PlayerJoined,ReplyEntityRequest
+    EntitySpwaned,EntityMoved,EntityUpdate,Ping,RequestEntitySpawn,PlayerJoined,ReplyEntityRequest
 };
 
 #endif

@@ -21,6 +21,9 @@ void Game::ProcessMessage(Message message, int ClientID)
     case MessageTypes::Ping:
         R_Ping(std::move(message), ClientID);
         break;
+    case MessageTypes::EntityUpdate:
+        R_EntityUpdate(std::move(message), ClientID);
+        break;
     default:
         std::cout << "processing custom message\n";
         ProcessCustomMessage(std::move(message), ClientID, mtype);
@@ -37,7 +40,7 @@ void Game::ProcessCustomMessage(Message message, int ClientID, MessageTypes mt)
 void Game::R_EntitySpawned(Message m, int ClientID)
 {
     //std::cout << "Receveid message spawning entity!\n";
-    //std::cout << "Message size: " << m.data.size() << '\n';
+    //std::cout << "Message size: " << m.size() << '\n';
     int entityID = m.pop_front<int>();
     //std::cout << "Entity id: " << entityID << '\n';
     auto e = Entity::deserialize(std::move(m));
@@ -52,7 +55,7 @@ Message Game::S_EntitySpawned(int entityID, Entity& entity)
     entity.serialize(m);
     /*
     std::cout << "Sending message spawning entity!\n";
-    std::cout << "Message size: " << m.data.size() << '\n';
+    std::cout << "Message size: " << m.size() << '\n';
     std::cout << "Entity id: " << entityID << '\n';
     */
     return std::move(m);
@@ -87,4 +90,19 @@ Message Game::S_Ping()
     Message m;
     m.push_back_(MessageTypes::Ping);
     return std::move(m);
+}
+
+void Game::R_EntityUpdate(Message m, int ClientID)
+{
+    int entityID = m.pop_front<int>();
+    Entities[entityID]->Deserialize(m);
+}
+
+Message Game::S_EntityUpdate(int entityID,Entity& entity)
+{
+    Message m;
+    m.push_back_(MessageTypes::EntityUpdate);
+    m.push_back(entityID);
+    entity.serialize(m);
+    
 }

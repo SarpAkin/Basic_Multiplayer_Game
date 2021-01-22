@@ -2,6 +2,7 @@
 
 
 #include "../shared/message_types.h"
+#include "../shared/EntityCompenents/TestCompenent.h"
 
 C_game::C_game(uint16_t pNum, const char* ip)
     : client(pNum, ip), renderer(this)
@@ -59,6 +60,7 @@ void C_game::OnGameStart()
 {
     clientID = client.ClientID;
     auto entity = std::make_unique<Entity>();
+    entity->getCompenent<TestCompenent>();
     client.getConnection().Send(S_RequestEntitySpawn(std::move(entity),
         [this](Entity& e, int entityID)
         {
@@ -148,7 +150,7 @@ Message C_game::S_PlayerJoined(int playerEntity)
 void C_game::R_ReplyEntityRequest(Message m)
 {
     std::cout << "R_ReplyEntityRequest\n";
-    std::cout << m.data.size() << '\n';
+    std::cout << m.size() << '\n';
     int ReplyID = m.pop_front<int>();
     int EntityID = m.pop_front<int>();
     auto funcit = EntityRequestFunctions.find(ReplyID);

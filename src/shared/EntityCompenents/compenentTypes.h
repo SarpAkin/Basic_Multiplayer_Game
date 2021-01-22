@@ -3,6 +3,7 @@
 
 enum class compenentTypes
 {
+Compenent_,
 TestCompenent_,
 };
 #endif
