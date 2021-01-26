@@ -3,19 +3,24 @@
 #include <functional>
 
 
-void Entity::serialize(Message& m)
+bool Entity::serialize(Message& m)
 {
-    m.push_back(transform);
+    m.push_back(didMove);
+    size_t size = m.size();
+    if(didMove)
+        m.push_back(transform);
     //do it last
-    Compenent::SerializeAll(compenents,m);
-
+    Component::SerializeAll(components,m);
+    //return false if nothing is serialized
+    return m.size() > size;
 }
 
 void Entity::Deserialize(Message& m)
 {
-    transform = m.pop_front<Transform>();
+    if(m.pop_front<bool>())
+        transform = m.pop_front<Transform>();
     //do it last
-    Compenent::DeserializeAll(this,m);
+    Component::DeserializeAll(this,m);
 
 }
 
@@ -24,7 +29,7 @@ Entity::Entity(Message& m)
     transform = m.pop_front<Transform>();
 
     //last
-    Compenent::DeserializeAll(this,m);
+    Component::DeserializeAll(this,m);
 }
 
 std::unique_ptr<Entity> Entity::deserialize(Message m)

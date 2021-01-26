@@ -44,7 +44,7 @@ void Game::R_EntitySpawned(Message m, int ClientID)
     int entityID = m.pop_front<int>();
     //std::cout << "Entity id: " << entityID << '\n';
     auto e = Entity::deserialize(std::move(m));
-    Entities.insert(std::pair<int, std::unique_ptr<Entity>>(entityID, std::move(e)));
+    Entities.emplace_back(entityID, std::move(e));
 }
 
 Message Game::S_EntitySpawned(int entityID, Entity& entity)
@@ -53,7 +53,7 @@ Message Game::S_EntitySpawned(int entityID, Entity& entity)
     m.push_back_(MessageTypes::EntitySpwaned);
     m.push_back(entityID);
     entity.serialize(m);
-    /*
+    /*std::map<int,std::unique_ptr<Entity>> Entities_;
     std::cout << "Sending message spawning entity!\n";
     std::cout << "Message size: " << m.size() << '\n';
     std::cout << "Entity id: " << entityID << '\n';
@@ -65,8 +65,8 @@ void Game::R_EntityMoved(Message m, int ClientID)
 {
     int EntityID = m.pop_front<int>();
     auto transform = m.pop_front<Transform>();
-    auto e = Entities.find(EntityID);
-    e->second->transform = transform;
+    auto e = findEntity(EntityID);
+    e->transform = transform;
 }
 
 Message Game::S_EntityMoved(int entityID, Entity& entity)
@@ -95,7 +95,7 @@ Message Game::S_Ping()
 void Game::R_EntityUpdate(Message m, int ClientID)
 {
     int entityID = m.pop_front<int>();
-    Entities[entityID]->Deserialize(m);
+    findEntity(entityID)->Deserialize(m);
 }
 
 Message Game::S_EntityUpdate(int entityID,Entity& entity)
@@ -104,5 +104,5 @@ Message Game::S_EntityUpdate(int entityID,Entity& entity)
     m.push_back_(MessageTypes::EntityUpdate);
     m.push_back(entityID);
     entity.serialize(m);
-    
+    return m;
 }

@@ -2,7 +2,7 @@
 
 
 #include "../shared/message_types.h"
-#include "../shared/EntityCompenents/TestCompenent.h"
+#include "../shared/EntityComponents/TestComponent.h"
 
 C_game::C_game(uint16_t pNum, const char* ip)
     : client(pNum, ip), renderer(this)
@@ -37,10 +37,9 @@ void C_game::tick(float ElapsedTime)
 
     {
         //move player
-        auto playerit = Entities.find(playerEntityID);
-        if (playerit != Entities.end())
+        if (auto playerit = findEntity(playerEntityID))
         {
-            Entity& player = *(playerit->second);
+            Entity& player = *playerit;
             MovePlayer(player);
             player.transform.collider.cord +=
                 player.transform.velocity * ElapsedTime;
@@ -60,7 +59,7 @@ void C_game::OnGameStart()
 {
     clientID = client.ClientID;
     auto entity = std::make_unique<Entity>();
-    entity->getCompenent<TestCompenent>();
+    entity->getComponent<TestComponent>();
     client.getConnection().Send(S_RequestEntitySpawn(std::move(entity),
         [this](Entity& e, int entityID)
         {
@@ -159,10 +158,9 @@ void C_game::R_ReplyEntityRequest(Message m)
         auto func = funcit->second;
         EntityRequestFunctions.erase(funcit);
 
-        auto e = Entities.find(EntityID);
-        if (e != Entities.end())
+        if (auto e = findEntity(EntityID))
         {
-            func(*(e->second), e->first);
+            func(*e, EntityID);
         }
         else
         {

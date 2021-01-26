@@ -1,6 +1,6 @@
 cd "${0%/*}"
 
-python3 codeGen/compenentSerializer.py
+python3 codeGen/componentSerializer.py
 
 cd automake
 python3 automake.py client_config.json client.mk

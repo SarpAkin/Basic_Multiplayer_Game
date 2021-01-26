@@ -9,7 +9,7 @@
 #include "vector2.h"
 #include "dynamic_ptr_cast.h"
 
-#include "EntityCompenents/compenent.h"
+#include "EntityComponents/component.h"
 
 struct Transform
 {
@@ -20,21 +20,21 @@ struct Transform
 class Entity//base 
 {
 private:
-    std::vector<std::unique_ptr<Compenent>> compenents;
+    std::vector<std::unique_ptr<Component>> components;
 public:
     Transform transform;//Transform is also serialized
-
+    bool didMove = false;
 
 public:
     Entity() = default;
 
-    //Compenent related
+    //Component related
     
     template<typename T>
-    T& getCompenent()//returns the spesified compenent if it doesn't exist creates one and returns it
+    T& getComponent()//returns the spesified component if it doesn't exist creates one and returns it
     {
-        static_assert(std::is_base_of<Compenent,T>::value,"Not a compenent!\n");
-        for(auto& c : compenents)
+        static_assert(std::is_base_of<Component,T>::value,"Not a component!\n");
+        for(auto& c : components)
         {
             T* comp = dynamic_cast<T*>(c.get());
             if(comp)
@@ -44,29 +44,29 @@ public:
         }
         std::unique_ptr<T> tmp = std::make_unique<T>(this);
         T& tmp_ = *tmp;
-        compenents.push_back(dynamic_ptr_cast<Compenent>(std::move(tmp)));
+        components.push_back(dynamic_ptr_cast<Component>(std::move(tmp)));
         return tmp_;
     }
 
     /*
     template<typename T>
-    T* addCompenent()
+    T* addComponent()
     {
-        static_assert(std::is_base_of<Compenent,T>::value,"Not a compenent!\n");
-        if(getCompenent<T>())
+        static_assert(std::is_base_of<Component,T>::value,"Not a component!\n");
+        if(getComponent<T>())
         {
-            //Compenent already exist so we return a nullptr
+            //Component already exist so we return a nullptr
             return nullptr;
         }
         auto tmp = std::make_unique<T>(this);
         auto tmp_ = tmp.get();
-        compenents.push_back(tmp);
+        components.push_back(tmp);
         return tmp_;
     }
     */
     //
 
-    void serialize(Message&);
+    bool serialize(Message&);
     void Deserialize(Message&);
     Entity(Message&);//desarialize constructor
 

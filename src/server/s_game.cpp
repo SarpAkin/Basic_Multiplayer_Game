@@ -116,7 +116,7 @@ void S_game::OnGameStart()
 void S_game::OnPlayerJoin(Client player)
 {
     //std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::cout << Entities.size() << "Syncinc the new player!\n";
+    //std::cout << Entities.size() << "Syncinc the new player!\n";
 
     player.connection->Send(S_Ping());
 
@@ -133,7 +133,7 @@ int S_game::SpawnEntity(std::unique_ptr<Entity> e)
 {
     int id = EntityCounter++;
     SendMessageAll(S_EntitySpawned(id, *e));
-    Entities.emplace(id, std::move(e));
+    Entities.emplace_back(id, std::move(e));
     return id;
 }
 
@@ -209,7 +209,7 @@ void S_game::R_EntitySpawned(Message m, int ClientID)
     int entityID = m.pop_front<int>();
     auto e = Entity::deserialize(std::move(m));
 
-    Entities.insert(std::pair<int, std::unique_ptr<Entity>>(entityID, std::move(e)));
+    Entities.emplace_back(entityID, std::move(e));
 }
 
 void S_game::R_EntityMoved(Message m, int ClientID)
@@ -217,11 +217,11 @@ void S_game::R_EntityMoved(Message m, int ClientID)
 
     int EntityID = m.pop_front<int>();
     auto transform = m.pop_front<Transform>();
-    auto e = Entities.find(EntityID);
+    auto e = findEntity(EntityID);
 
-    if (e != Entities.end())
+    if (auto e = findEntity(EntityID))
     {
-        auto& entity = *(e->second);
+        auto& entity = *e;
         entity.transform = transform;
 
         //send to other players

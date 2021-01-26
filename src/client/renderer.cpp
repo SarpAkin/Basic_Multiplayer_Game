@@ -16,10 +16,9 @@ bool Renderer::OnUserUpdate(float fElapsedTime)
     
     //Set camera cord to the follow entity if it exists.
     {
-        auto it = game->Entities.find(EntityToFollowID);
-        if (it != game->Entities.end())
+        if (auto it = game->findEntity(EntityToFollowID))
         {
-            CameraCord = it->second->transform.collider.cord;
+            CameraCord = it->transform.collider.cord;
         }
     }
 
