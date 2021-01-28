@@ -32,7 +32,7 @@ protected://functions
     Message S_Ping();
 
     void R_EntityUpdate(Message m, int ClientID);
-    Message S_EntityUpdate(int entityID, Entity& entity);
+    bool S_EntityUpdate(Message& m,int entityID, Entity& entity);
 
 
 public:

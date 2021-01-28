@@ -50,7 +50,7 @@ public:
         mut.lock();
         auto temp = std::move(deq);
         mut.unlock();
-        return std::move(temp);
+        return temp;
     }
 
     inline size_t size()

@@ -171,7 +171,7 @@ Client Server::GetClient(int clientID)
             {
                 auto tmp = cl;
                 clientV_mut.unlock();
-                return std::move(tmp);
+                return tmp;
             }
         }
     }

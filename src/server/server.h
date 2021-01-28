@@ -14,7 +14,7 @@ namespace asio = boost::asio;
 
 struct Client
 {
-    uint32_t id;
+    int id;
     std::shared_ptr<Connection> connection;
 };
 

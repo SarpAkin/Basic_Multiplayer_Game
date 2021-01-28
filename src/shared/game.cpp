@@ -8,8 +8,9 @@
 
 void Game::ProcessMessage(Message message, int ClientID)
 {
+    std::cout << "Message size " << message.size() << '\n';
     MessageTypes mtype = message.pop_front<MessageTypes>();
-
+    std::cout << "Message Type " << (int)mtype << '\n';
     switch (mtype)
     {
     case MessageTypes::EntitySpwaned:
@@ -52,15 +53,16 @@ Message Game::S_EntitySpawned(int entityID, Entity& entity)
     Message m;
     m.push_back_(MessageTypes::EntitySpwaned);
     m.push_back(entityID);
+    entity.didMove = true;
     entity.serialize(m);
+    entity.didMove = false;
     /*std::map<int,std::unique_ptr<Entity>> Entities_;
     std::cout << "Sending message spawning entity!\n";
     std::cout << "Message size: " << m.size() << '\n';
     std::cout << "Entity id: " << entityID << '\n';
     */
-    return std::move(m);
+    return m;
 }
-
 void Game::R_EntityMoved(Message m, int ClientID)
 {
     int EntityID = m.pop_front<int>();
@@ -71,11 +73,12 @@ void Game::R_EntityMoved(Message m, int ClientID)
 
 Message Game::S_EntityMoved(int entityID, Entity& entity)
 {
+    //std::cout << "MOved\n";
     Message m;
     m.push_back_(MessageTypes::EntityMoved);
     m.push_back(entityID);
     m.push_back(entity.transform);
-    return std::move(m);
+    return m;
 }
 
 void Game::R_Ping(Message m, int ClientID)
@@ -89,7 +92,7 @@ Message Game::S_Ping()
     std::cout << "Pinging\n";
     Message m;
     m.push_back_(MessageTypes::Ping);
-    return std::move(m);
+    return m;
 }
 
 void Game::R_EntityUpdate(Message m, int ClientID)
@@ -98,11 +101,9 @@ void Game::R_EntityUpdate(Message m, int ClientID)
     findEntity(entityID)->Deserialize(m);
 }
 
-Message Game::S_EntityUpdate(int entityID,Entity& entity)
+bool Game::S_EntityUpdate(Message& m, int entityID, Entity& entity)
 {
-    Message m;
     m.push_back_(MessageTypes::EntityUpdate);
     m.push_back(entityID);
-    entity.serialize(m);
-    return m;
+    return entity.serialize(m);
 }

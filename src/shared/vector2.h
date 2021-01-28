@@ -10,7 +10,7 @@ public:
     float y = 0;
 
     Vector2(float x,float y);
-    Vector2();
+    Vector2() = default;
 
     static float distance(Vector2 a,Vector2 b);
 
@@ -37,6 +37,10 @@ public:
     inline Vector2 operator / (float f)
     {
         return Vector2(this->x / f,this->y / f);
+    }
+    inline bool operator == (Vector2 v2)
+    {
+        return x == v2.x && y == v2.y;
     }
     inline void operator += (Vector2 v2)
     {

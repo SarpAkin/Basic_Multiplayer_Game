@@ -22,13 +22,18 @@ C_game::C_game(uint16_t pNum, const char* ip)
     );
 }
 
+bool tmpbool = true;
+
 void C_game::tick(float ElapsedTime)
 {
     //Read messages and sync with the server
-    auto messages = client.connection->inqueue.GetDeque();
-    for (auto& m : messages)
+    if (tmpbool)
     {
-        ProcessMessage(std::move(m), 0);
+        auto messages = client.connection->inqueue.GetDeque();
+        for (auto& m : messages)
+        {
+            ProcessMessage(std::move(m), 0);
+        }
     }
     //
 
@@ -39,11 +44,11 @@ void C_game::tick(float ElapsedTime)
         //move player
         if (auto playerit = findEntity(playerEntityID))
         {
+            //tmpbool = false;
             Entity& player = *playerit;
             MovePlayer(player);
             player.transform.collider.cord +=
                 player.transform.velocity * ElapsedTime;
-
             client.connection->Send(S_EntityMoved(playerEntityID, player));
         }
     }
@@ -59,11 +64,15 @@ void C_game::OnGameStart()
 {
     clientID = client.ClientID;
     auto entity = std::make_unique<Entity>();
-    entity->getComponent<TestComponent>();
+    entity->transform.isServerSide = false;
+    client.getConnection().Send(S_Ping());
+    //entity->getComponent<TestComponent>();
     client.getConnection().Send(S_RequestEntitySpawn(std::move(entity),
         [this](Entity& e, int entityID)
         {
+            //std::cout << "aaa\n";
             setPlayer(entityID);
+            //e.transform.collider.cord.x += 5;
         }));
 }
 
@@ -114,7 +123,7 @@ C_game::~C_game()
 
 //Messages
 
-void C_game::ProcessCustomMessage(Message m, int ClientID,MessageTypes mt)
+void C_game::ProcessCustomMessage(Message m, int ClientID, MessageTypes mt)
 {
     switch (mt)
     {
@@ -135,7 +144,7 @@ Message C_game::S_RequestEntitySpawn(std::unique_ptr<Entity> e, std::function<vo
     m.push_back_(MessageTypes::RequestEntitySpawn);
     m.push_back(replyID);
     e->serialize(m);
-    return std::move(m);
+    return m;
 }
 
 Message C_game::S_PlayerJoined(int playerEntity)
@@ -143,7 +152,7 @@ Message C_game::S_PlayerJoined(int playerEntity)
     Message m;
     m.push_back_(MessageTypes::PlayerJoined);
     m.push_back(playerEntity);
-    return std::move(m);
+    return m;
 }
 
 void C_game::R_ReplyEntityRequest(Message m)
@@ -164,7 +173,12 @@ void C_game::R_ReplyEntityRequest(Message m)
         }
         else
         {
-            std::cout << "Entity doesn't exist. not executing the function\n";
+            std::cout << EntityID << " Entity doesn't exist. not executing the function\n";
+            for (auto& e : Entities)
+            {
+                std::cout << e.first << ' ';
+            }
+            std::cout << '\n';
         }
     }
     else

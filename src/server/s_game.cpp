@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "../shared/message_types.h"
+#include "../shared/PhysicEngine.h"
 
 void S_game::start(uint16_t portNum, bool tickAutomaticly)
 {
@@ -79,11 +80,19 @@ void S_game::tick(double ElapsedTime)
 
     //Run the Game logic
     //Such as Physic engine and Events
+    simulatePhysics(Entities,ElapsedTime);
 
-
-    //
-
+    
     //Write messages and sync with players
+    ///Snyc Entities
+    MToAll.reserve(MToAll.size() + Entities.size());
+    for(auto& e : Entities)
+    {
+        Message m;
+        if(S_EntityUpdate(m,e.first,*e.second))
+            MToAll.push_back(m);
+    }
+
     for (int i = players.size() - 1;i >= 0;--i)
     {
         if (!players[i].connection->Send(MToAll))
@@ -110,7 +119,10 @@ void S_game::tick(double ElapsedTime)
 
 void S_game::OnGameStart()
 {
-
+    auto e = std::make_unique<Entity>();
+    e->transform.collider.cord.x = 1;
+    e->transform.collider.size = Vector2(3,5);
+    SpawnEntity(std::move(e));
 }
 
 void S_game::OnPlayerJoin(Client player)
@@ -176,7 +188,7 @@ void S_game::ProcessCustomMessage(Message m, int ClientID, MessageTypes mt)
 
 void S_game::R_RequestEntitySpawn(Message m, int ClientID)
 {
-    std::cout << "received\n";
+    std::cout << "received Entity request spawn\n";
     auto ReplyID = m.pop_front<int>();
     auto e = Entity::deserialize(std::move(m));
     int Eid = SpawnEntity(std::move(e));
@@ -193,7 +205,7 @@ Message S_game::S_ReplyEntityRequest(int ReplyID, int EntityID)
     m.push_back_(MessageTypes::ReplyEntityRequest);
     m.push_back(ReplyID);
     m.push_back(EntityID);
-    return std::move(m);
+    return m;
 }
 
 void S_game::R_PlayerJoined(Message m, int ClientID)

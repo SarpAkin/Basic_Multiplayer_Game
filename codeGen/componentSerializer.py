@@ -176,6 +176,7 @@ def baseCompFunc(class_,h__) -> str:
         srcGenerated += f"\n\t\t\tbreak;\n"
     srcGenerated += f"\n\t\t\tdefault:"
     srcGenerated += f"\n\t\t\tstd::cout << \"invalid component Type! \" << (int)compType << \'\\n\';"
+    srcGenerated += f"\n\t\t\treturn;"
     srcGenerated += f"\n\t\t\tbreak;"
 
     srcGenerated += "\n\t\t}"

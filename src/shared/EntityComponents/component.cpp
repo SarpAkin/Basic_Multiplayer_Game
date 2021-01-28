@@ -59,6 +59,7 @@ void Component::DeserializeAll(Entity* e,Message& m)
 
 			default:
 			std::cout << "invalid component Type! " << (int)compType << '\n';
+			return;
 			break;
 		}
 	}

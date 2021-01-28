@@ -1,29 +1,25 @@
 #include <vector>
 
 template<typename T>
-T* findIndVec(std::vector<std::pair<int, T>> vec, int id)
+T* findIndVec(std::vector<std::pair<int, T>>& vec, int id)
 {
+    if(!vec.size())//check if the vectors size is greater than 0
+        return nullptr;
     int rangeBegin = 0;
     int rangeEnd = vec.size() - 1;
-    int index = rangeEnd / 2;
-    while (vec[index].first != id)
+    while (rangeBegin < rangeEnd)
     {
-        int oldindex = index;
-        if (vec[index].first < id)
-        {
-            rangeBegin = index;
-            index += (rangeEnd - index) >> 1;
-        }
-        else
-        {
-            rangeEnd = index;
-            index -= (index - rangeBegin) >> 1;
-        }
+        int mid = (rangeEnd + rangeBegin) >> 1;//dive by 2
 
-        if(oldindex == index)
-        {
-            return nullptr;
-        }
+        if (vec[mid].first < id)
+            rangeBegin = mid + 1;
+        else if (vec[mid].first > id)
+            rangeEnd = mid - 1;
+        else // if vec[mid].fist isn't greater or lesser than id its equal to id
+            return &(vec[mid].second);
     }
-    return &(vec[index].second);
+    //Chech the begining or the ending of the vector
+    if(vec[rangeBegin].first == id)
+        return &(vec[rangeBegin].second);
+    return nullptr;
 }

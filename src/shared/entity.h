@@ -13,8 +13,37 @@
 
 struct Transform
 {
+    bool isServerSide = true;
     AABB collider;
     Vector2 velocity;
+    Vector2 acceleration;
+    Vector2 staticForces;
+    float inversemass = 0;
+    float bouncieness = 1.0f;
+    float drag = 0.8f;
+    //private:
+    float mass = 1;
+    public://functions
+    inline Vector2 GetPivot()
+    {
+        return collider.size / 2;
+    }
+    inline Vector2 GetMidPoint()
+    {
+        return collider.GetCenterPoint();
+    }
+    inline void setMass(float m)
+    {
+        mass = m;
+        if(m == 0)
+            inversemass = 0;
+        else
+            inversemass = 1 / m;
+    }
+    inline float getMass()
+    {
+        return mass;
+    }
 };
 
 class Entity//base 
@@ -34,6 +63,7 @@ public:
     T& getComponent()//returns the spesified component if it doesn't exist creates one and returns it
     {
         static_assert(std::is_base_of<Component,T>::value,"Not a component!\n");
+        std::cout << components.size() << "aaa\n";
         for(auto& c : components)
         {
             T* comp = dynamic_cast<T*>(c.get());

@@ -10,7 +10,7 @@ bool Entity::serialize(Message& m)
     if(didMove)
         m.push_back(transform);
     //do it last
-    Component::SerializeAll(components,m);
+    //Component::SerializeAll(components,m);
     //return false if nothing is serialized
     return m.size() > size;
 }
@@ -20,16 +20,14 @@ void Entity::Deserialize(Message& m)
     if(m.pop_front<bool>())
         transform = m.pop_front<Transform>();
     //do it last
-    Component::DeserializeAll(this,m);
+    //Component::DeserializeAll(this,m);
 
 }
 
 Entity::Entity(Message& m)
 {
-    transform = m.pop_front<Transform>();
-
-    //last
-    Component::DeserializeAll(this,m);
+    Deserialize(m);
+    std::cout << transform.collider.cord.ToString() << std::endl;
 }
 
 std::unique_ptr<Entity> Entity::deserialize(Message m)

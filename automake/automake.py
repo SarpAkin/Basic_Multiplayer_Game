@@ -3,15 +3,14 @@ import sys
 import json
 
 
-##Configurations
+
 #valid CPP formats
 cpp_format = [".cpp",".c"]
-compiler = "gcc"
-cflags = "-lX11 -lGL -pthread -lpthread -lpng -lstdc++fs -lstdc++ -std=c++17 -lm -g"
-##
 
 executable_dir = sys.argv[0]
 executable_dir = executable_dir[0:executable_dir.rfind("/") + 1]
+
+executable_dir = ""
 
 def findInDir(path: str):
     cpp_files = list()
@@ -62,64 +61,51 @@ def MakeObfiles(cppfile: str,hstr: str):
     objectfiles.append(objectfile)
     return objectfile + ":" + cppfile + hstr + "\n\t$(CC) -c " + cppfile + " -o" + objectfile + " $(CFLAGS)\n"
 
+def Make_makefile(compiler:str,cflags:str,srcdirs:list,outfile:str):
+    global objectfiles
+    objectfiles = list()
 
-jfile = None
-if(len(sys.argv) >= 2):
-    jfile = open(executable_dir + sys.argv[1],"r")
-else:
-    jfile = open(executable_dir + "config.json","r")
+    writestr = ""
+    writestr += "CC = " + compiler + "\n"
+    writestr += "CFLAGS = " + cflags + "\n"
+    writestr += "OUT = " + outfile + "\n"
 
+    #Update this in orignal 
 
-jdata: dict = json.load(jfile)
+    cpp_files = list()
+    for src in srcdirs:
+        cpp_files += findInDir(src)
 
+    #
+    ob_str = ""
 
-writestr = ""
-writestr += "CC = " + compiler + "\n"
-writestr += "CFLAGS = " + cflags + "\n"
-writestr += "OUT = " + jdata["outfile"] + "\n"
+    HeaderFiles:dict
+    if(os.path.isfile(executable_dir + "automake/HeaderFiles.json")):
+        HeaderFiles = json.load(open(executable_dir + "automake/HeaderFiles.json","r"))
+        for file in cpp_files:
+            o_File: str = cpp_To_o(file)
+            if(os.path.isfile(executable_dir + o_File)):
+                if(os.path.getmtime(executable_dir + o_File) > os.path.getmtime(executable_dir + file)):
+                    #print(file + " is up to date")
+                    ob_str += MakeObfiles(file,HeaderFiles[o_File])
+                    continue
+            h_Files = list_To_Str(FindAllHeaders(file))
+            ob_str += MakeObfiles(file,h_Files)
+            HeaderFiles[o_File] = h_Files
+    else:
+        HeaderFiles = dict()
+        for file in cpp_files:
+            h_Files = list_To_Str(FindAllHeaders(file))
+            ob_str += MakeObfiles(file,h_Files)
+            HeaderFiles[cpp_To_o(file)] = h_Files
+    json.dump(HeaderFiles,open(executable_dir + "automake/HeaderFiles.json","w"))
 
-#Update this in orignal 
+    obFileStr = ""
+    for obf in objectfiles:
+        obFileStr += " " + obf
 
-cpp_files = list()
-for src in jdata["srcdir"]:
-    cpp_files += findInDir(src)
+    writestr += "\n$(OUT):" + obFileStr + "\n\t$(CC) -o $(OUT) " + obFileStr + " $(CFLAGS)\n\n"
+    writestr += ob_str
 
-#
-ob_str = ""
-
-HeaderFiles:dict
-if(os.path.isfile(executable_dir + "HeaderFiles.json")):
-    HeaderFiles = json.load(open(executable_dir + "HeaderFiles.json","r"))
-    for file in cpp_files:
-        o_File: str = cpp_To_o(file)
-        if(os.path.isfile(executable_dir + o_File)):
-            if(os.path.getmtime(executable_dir + o_File) > os.path.getmtime(executable_dir + file)):
-                #print(file + " is up to date")
-                ob_str += MakeObfiles(file,HeaderFiles[o_File])
-                continue
-        h_Files = list_To_Str(FindAllHeaders(file))
-        ob_str += MakeObfiles(file,h_Files)
-        HeaderFiles[o_File] = h_Files
-else:
-    HeaderFiles = dict()
-    for file in cpp_files:
-        h_Files = list_To_Str(FindAllHeaders(file))
-        ob_str += MakeObfiles(file,h_Files)
-        HeaderFiles[cpp_To_o(file)] = h_Files
-json.dump(HeaderFiles,open(executable_dir + "HeaderFiles.json","w"))
-
-obFileStr = ""
-for obf in objectfiles:
-    obFileStr += " " + obf
-
-writestr += "\n$(OUT):" + obFileStr + "\n\t$(CC) -o $(OUT) " + obFileStr + " $(CFLAGS)\n\n"
-writestr += ob_str
-
-
-mfile = None
-if(len(sys.argv) >= 3):
-    mfile= open(executable_dir + sys.argv[2],"w")
-else:
-    mfile = open(executable_dir + "makefile","w")
-
-mfile.write(writestr)
+    mfile = open(executable_dir + outfile + ".mk","w")
+    mfile.write(writestr)
