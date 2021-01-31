@@ -43,11 +43,9 @@ std::vector<std::string> splitString(std::string& s,const char* splitchar)
 
 void C_game::ProcessCommands()
 {
-    std::cout << isRunning << "aaaaaaaaaaaaaaaaaabb\n";
     while (isRunning)
     {
         std::string commandRaw;
-        std::cout << "aaaaaaaaaaaaaaaaaa\n";
         std::cin >> commandRaw;
 
         std::vector<std::string> splited = splitString(commandRaw," ");
