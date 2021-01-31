@@ -8,9 +8,9 @@
 
 void Game::ProcessMessage(Message message, int ClientID)
 {
-    std::cout << "Message size " << message.size() << '\n';
+    //std::cout << "Message size " << message.size() << '\n';
     MessageTypes mtype = message.pop_front<MessageTypes>();
-    std::cout << "Message Type " << (int)mtype << '\n';
+    //std::cout << "Message Type " << (int)mtype << '\n';
     switch (mtype)
     {
     case MessageTypes::EntitySpwaned:
@@ -40,11 +40,12 @@ void Game::ProcessCustomMessage(Message message, int ClientID, MessageTypes mt)
 
 void Game::R_EntitySpawned(Message m, int ClientID)
 {
-    //std::cout << "Receveid message spawning entity!\n";
+    std::cout  << "Receveid message spawning entity!\n";
     //std::cout << "Message size: " << m.size() << '\n';
     int entityID = m.pop_front<int>();
     //std::cout << "Entity id: " << entityID << '\n';
     auto e = Entity::deserialize(std::move(m));
+    std::cout << e->transform.collider.size.ToString() << '\n';
     Entities.emplace_back(entityID, std::move(e));
 }
 
@@ -63,7 +64,7 @@ Message Game::S_EntitySpawned(int entityID, Entity& entity)
     */
     return m;
 }
-void Game::R_EntityMoved(Message m, int ClientID)
+void Game::R_EntityMoved(Message m, int ClientID) 
 {
     int EntityID = m.pop_front<int>();
     auto transform = m.pop_front<Transform>();
@@ -95,7 +96,7 @@ Message Game::S_Ping()
     return m;
 }
 
-void Game::R_EntityUpdate(Message m, int ClientID)
+void Game::R_EntityUpdate(Message m, int ClientID)//there is an override at c_game.cpp
 {
     int entityID = m.pop_front<int>();
     findEntity(entityID)->Deserialize(m);
@@ -106,4 +107,15 @@ bool Game::S_EntityUpdate(Message& m, int entityID, Entity& entity)
     m.push_back_(MessageTypes::EntityUpdate);
     m.push_back(entityID);
     return entity.serialize(m);
+}
+
+void Game::SyncEntity(std::vector<Message>& mVec)
+{
+    mVec.reserve(mVec.size() + Entities.size());
+    for (auto& e : Entities)
+    {
+        Message m;
+        if (S_EntityUpdate(m, e.first, *e.second))
+            mVec.push_back(m);
+    }
 }

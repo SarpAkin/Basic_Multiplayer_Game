@@ -68,7 +68,7 @@ def Make_makefile(compiler:str,cflags:str,srcdirs:list,outfile:str):
     writestr = ""
     writestr += "CC = " + compiler + "\n"
     writestr += "CFLAGS = " + cflags + "\n"
-    writestr += "OUT = " + outfile + "\n"
+    writestr += "OUT = " + outfile + ".out\n"
 
     #Update this in orignal 
 

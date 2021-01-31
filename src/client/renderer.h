@@ -17,7 +17,7 @@ private:
 
     Vector2 CameraCord;
     Vector2 pivot;
-    float TileSize = 32.0f;
+    float TileSize = 12.0f;
 public:
     int EntityToFollowID = -1;
 public:
@@ -37,10 +37,9 @@ public:
     {
         return GetCamCord() + Vector2(x, y) / TileSize;
     }
-    inline olc::vi2d LocalCordToScreen(Vector2 v)
+    inline olc::vf2d LocalCordToScreen(Vector2 v)
     {
-        Vector2 final = (v - GetCamCord()) * TileSize;
-        return olc::vi2d((int32_t)final.x, (int32_t)final.y);
+        return (v - GetCamCord()) * TileSize;
     }
 };
 

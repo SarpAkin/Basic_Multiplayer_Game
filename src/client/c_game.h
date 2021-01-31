@@ -19,29 +19,33 @@ private:
     Renderer renderer;
     int playerEntityID = -1;
 
-    //Creates an empty thread to make it joinable
-    std::thread workerThread = std::thread(([]() {/*do nothing*/}));
-
+    std::thread workerThread;
+    std::thread consoleThread;
     bool isRunning = true;
     bool isStopped = false;
 
     int EntityRequestCounter = 0;
     //Lambda functions which are stored for later execution when the EntityRequest Repiled.
-    std::map<int,std::function<void(Entity&,int)>> EntityRequestFunctions;
+    std::map<int, std::function<void(Entity&, int)>> EntityRequestFunctions;
 public:
+    float speed = 8;
     int clientID;
 
-protected://functions
+    static std::map<std::string,std::function<void(C_game&,std::vector<std::string>)>> commands;
+private://functions
+    void ProcessCommands();
+protected:
     void OnGameStart();
-    
+
     void MovePlayer(Entity& player);
     //Don't uncomment unitl define it
     //void ProcessCustomMessage(Message Message, int ClientID) override; 
 
     //Messages
-    void ProcessCustomMessage(Message m, int ClientID,MessageTypes mt) override;
+    void ProcessCustomMessage(Message m, int ClientID, MessageTypes mt) override;
+    void R_EntityUpdate(Message m, int ClientID) override;
 
-    Message S_RequestEntitySpawn(std::unique_ptr<Entity>,std::function<void(Entity&,int)>);
+    Message S_RequestEntitySpawn(std::unique_ptr<Entity>, std::function<void(Entity&, int)>);
     Message S_PlayerJoined(int);
 
     void R_ReplyEntityRequest(Message m);

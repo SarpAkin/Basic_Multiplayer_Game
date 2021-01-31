@@ -4,6 +4,7 @@ Connection::Connection(asio::ip::tcp::socket&& socket__, asio::io_context& ic)
     : socket_(std::move(socket__))
 {
     i_cont = &ic;
+    WorkerThread = std::thread(&Connection::write, this);
     listen();
 }
 
@@ -14,6 +15,8 @@ Connection::Connection(asio::ip::tcp::socket&& socket__,
     i_cont = &ic;
     OnMessageReceive = onMR;
     useQueueOnMessageReceive = false;
+
+    WorkerThread = std::thread(&Connection::write, this);
     listen();
 }
 
@@ -21,24 +24,9 @@ bool Connection::Send(Message DVec)
 {
     if (!isOpen)
         return false;
-    //May require a mutex here
-    size_t qsize = outqueue.size();
+
     outqueue.push_back(std::move(DVec));
-    //
-    
-    if (qsize == 0)
-    {
-        WorkerThread.join();
-        WorkerThread = std::thread(
-            [this]()
-            {
-                while (isOpen && outqueue.size() != 0)
-                {
-                    write();
-                }
-            }
-        );
-    }
+    messageWait.notify_one();
 
     return true;
 }
@@ -49,55 +37,63 @@ bool Connection::Send(std::vector<Message> DVec)
         return false;
 
     //May require a mutex here
-    size_t qsize = outqueue.size();
+    //size_t qsize = outqueue.size();
     outqueue.push_back(std::move(DVec));
+    messageWait.notify_one();
     //
-
+    /*
     if (qsize == 0)
     {
         WorkerThread.join();
         WorkerThread = std::thread(
             [this]()
             {
+
                 while (isOpen && outqueue.size() != 0)
                 {
                     write();
                 }
+
             }
         );
     }
-
+    */
     return true;
 }
 
 void Connection::write()
 {
-    if (!socket_.is_open())
+    try
     {
-        Stop();
-        return;
+        while (socket_.is_open() && isOpen)
+        {
+            if (outqueue.size())
+            {
+                writeBBuffer = outqueue.pop_front();
+                MHeader header;
+                header.DataSize = writeBBuffer.size();
+                writeHBuffer = std::vector<char>((char*)&header, (char*)&header + sizeof(MHeader));
+                socket_.wait(socket_.wait_write);
+                socket_.write_some(asio::buffer(writeHBuffer));
+                socket_.wait(socket_.wait_write);
+                socket_.write_some(asio::buffer(writeBBuffer.data()));
+            }
+            else
+            {
+                messageWait.wait(waitLock);
+            }
+        }
     }
-    writeBBuffer = outqueue.pop_front();
-    MHeader header;
-    header.DataSize = writeBBuffer.size();
-    writeHBuffer = std::vector<char>((char*)&header, (char*)&header + sizeof(MHeader));
-    boost::system::error_code ec;
-    socket_.wait(socket_.wait_write);
-    socket_.write_some(asio::buffer(writeHBuffer), ec);
-    if (ec)
+    catch (const boost::system::error_code& ec)
     {
         std::cout << "Some error occured stoping connection. reason :" << ec.message() << '\n';
-        Stop();
-        return;
     }
-    socket_.wait(socket_.wait_write);
-    socket_.write_some(asio::buffer(writeBBuffer.data()), ec);
-    if (ec)
+    catch(const boost::wrapexcept<boost::system::system_error>& ec)
     {
-        std::cout << "Some error occured stoping connection. reason :" << ec.message() << '\n';
-        Stop();
-        return;
+        std::cout << "Some error occured stoping connection. reason :" << ec.what() << '\n';
     }
+
+    Stop();
 }
 
 void Connection::listen()
@@ -149,12 +145,14 @@ void Connection::Stop()
     if (!isOpen)
         return;
     isOpen = false;
+    messageWait.notify_all();
     socket_.cancel();
     socket_.close();
-    WorkerThread.join();
 }
 
 Connection::~Connection()
 {
     Stop();
+    //this musn't  be at stop otherwise worker thread try to join itself
+    WorkerThread.join();
 }

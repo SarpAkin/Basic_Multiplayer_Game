@@ -172,8 +172,12 @@ def baseCompFunc(class_,h__) -> str:
         if c_name == base_component:
             continue
         srcGenerated += f"\n\t\t\tcase {enum_name}::{c_name}_:"
-        srcGenerated += f"\n\t\t\te->getComponent<{c_name}>().Deserialize(m);"
-        srcGenerated += f"\n\t\t\tbreak;\n"
+        srcGenerated += "\n\t\t\t{"
+        srcGenerated += f"\n\t\t\t\tauto comp = e->getComponent<{c_name}>();"
+        srcGenerated += f"\n\t\t\t\tcomp.Deserialize(m);"
+        srcGenerated += f"\n\t\t\t\tcomp.OnSync();"
+        srcGenerated += f"\n\t\t\t\tbreak;\n"
+        srcGenerated += "\n\t\t\t}"
     srcGenerated += f"\n\t\t\tdefault:"
     srcGenerated += f"\n\t\t\tstd::cout << \"invalid component Type! \" << (int)compType << \'\\n\';"
     srcGenerated += f"\n\t\t\treturn;"

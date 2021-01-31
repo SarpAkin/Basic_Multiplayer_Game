@@ -3,40 +3,48 @@
 
 #include <string>
 
+#ifndef SERVER_SIDE
+namespace olc
+{
+template<typename T>
+struct v2d_generic;
+typedef v2d_generic<float> vf2d;
+};
+#endif
 class Vector2
 {
 public:
     float x = 0;
     float y = 0;
 
-    Vector2(float x,float y);
+    Vector2(float x, float y);
     Vector2() = default;
 
-    static float distance(Vector2 a,Vector2 b);
+    static float distance(Vector2 a, Vector2 b);
 
     inline Vector2 operator + (Vector2 v2)
     {
-        return Vector2(this->x + v2.x,this->y + v2.y);
+        return Vector2(this->x + v2.x, this->y + v2.y);
     }
     inline Vector2 operator - (Vector2 v2)
     {
-        return Vector2(this->x - v2.x,this->y - v2.y);
+        return Vector2(this->x - v2.x, this->y - v2.y);
     }
     inline Vector2 operator * (Vector2 v2)
     {
-        return Vector2(this->x * v2.x,this->y * v2.y);
+        return Vector2(this->x * v2.x, this->y * v2.y);
     }
     inline Vector2 operator / (Vector2 v2)
     {
-        return Vector2(this->x / v2.x,this->y / v2.y);
+        return Vector2(this->x / v2.x, this->y / v2.y);
     }
     inline Vector2 operator * (float f)
     {
-        return Vector2(this->x * f,this->y * f);
+        return Vector2(this->x * f, this->y * f);
     }
     inline Vector2 operator / (float f)
     {
-        return Vector2(this->x / f,this->y / f);
+        return Vector2(this->x / f, this->y / f);
     }
     inline bool operator == (Vector2 v2)
     {
@@ -60,19 +68,22 @@ public:
     }
     inline Vector2 normalized()
     {
-        return *this / distance(*this,Vector2(0,0));
+        return *this / distance(*this, Vector2(0, 0));
     }
     inline std::string ToString()
     {
         return std::to_string(x) + " " + std::to_string(y);
     }
+    #ifndef SERVER_SIDE
+    operator olc::vf2d();
+    #endif
 };
 
 struct AABB
 {
     Vector2 cord;
     Vector2 size;
-    inline AABB(Vector2 c,Vector2 s)
+    inline AABB(Vector2 c, Vector2 s)
     {
         cord = c;
         size = s;
@@ -84,15 +95,15 @@ struct AABB
     }
     inline void FixBoundry()
     {
-        if(size.x < 0)
+        if (size.x < 0)
         {
             cord.x += size.x;
-            size.x = -size.x; 
+            size.x = -size.x;
         }
-        if(size.y < 0)
+        if (size.y < 0)
         {
             cord.y += size.y;
-            size.y = -size.y; 
+            size.y = -size.y;
         }
     }
 };

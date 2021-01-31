@@ -5,6 +5,12 @@
 #include "../shared/message_types.h"
 #include "../shared/PhysicEngine.h"
 
+S_game::S_game(uint32_t tickrate)
+{
+    tickDelay = billion / tickrate;
+    //std::cout << tickDelay;
+}
+
 void S_game::start(uint16_t portNum, bool tickAutomaticly)
 {
     if (isStarted)//Return if it is already started
@@ -25,13 +31,22 @@ void S_game::start(uint16_t portNum, bool tickAutomaticly)
                 {
                     auto e = s;
                     s = std::chrono::steady_clock::now();
-
                     auto dur = s - e;
-                    deltaTime = dur.count();
-                    deltaTime /= 1000000000;
+                    uint64_t dur_ = dur.count();
+                    if(tickDelay > dur_)
+                    {
+                        std::this_thread::sleep_for(std::chrono::nanoseconds(tickDelay - dur_));
+                    }
+                    else
+                    {
+                        std::cout << "can't catch up " << (dur_ - tickDelay) / 1000000  << "ms behind.\n";
+                    }
+                    s = std::chrono::steady_clock::now();
+                    deltaTime = (s - e).count();
+                    deltaTime /= billion;
                     CounterF += deltaTime;
 
-
+                    //std::cout << deltaTime << "\n";
                     tick(deltaTime);
 
                     ++CounterT;
@@ -85,13 +100,7 @@ void S_game::tick(double ElapsedTime)
     
     //Write messages and sync with players
     ///Snyc Entities
-    MToAll.reserve(MToAll.size() + Entities.size());
-    for(auto& e : Entities)
-    {
-        Message m;
-        if(S_EntityUpdate(m,e.first,*e.second))
-            MToAll.push_back(m);
-    }
+    SyncEntity(MToAll);
 
     for (int i = players.size() - 1;i >= 0;--i)
     {
@@ -102,7 +111,7 @@ void S_game::tick(double ElapsedTime)
             players.erase(players.begin() + i);
         }
     }
-
+    MToAll.clear();
     // 
 
     //handle New Players
@@ -120,7 +129,7 @@ void S_game::tick(double ElapsedTime)
 void S_game::OnGameStart()
 {
     auto e = std::make_unique<Entity>();
-    e->transform.collider.cord.x = 1;
+    e->transform.collider.cord.x = 4;
     e->transform.collider.size = Vector2(3,5);
     SpawnEntity(std::move(e));
 }
@@ -143,6 +152,7 @@ void S_game::OnPlayerJoin(Client player)
 
 int S_game::SpawnEntity(std::unique_ptr<Entity> e)
 {
+    //std::cout << "spawning entity\n";
     int id = EntityCounter++;
     SendMessageAll(S_EntitySpawned(id, *e));
     Entities.emplace_back(id, std::move(e));
@@ -240,4 +250,12 @@ void S_game::R_EntityMoved(Message m, int ClientID)
         SendMessageAll(S_EntityMoved(EntityID, entity), ClientID);
     }
     //
+}
+
+void S_game::R_EntityUpdate(Message m, int ClientID)
+{
+    int entityID = m.pop_front<int>();
+    auto e = findEntity(entityID);
+    e->didMove = true;
+    e->Deserialize(m);
 }

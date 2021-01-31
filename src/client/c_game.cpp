@@ -3,16 +3,19 @@
 
 #include "../shared/message_types.h"
 #include "../shared/EntityComponents/TestComponent.h"
+#include "../shared/PhysicEngine.h"
+
+std::map<std::string,std::function<void(C_game&,std::vector<std::string>)>> C_game::commands;
 
 C_game::C_game(uint16_t pNum, const char* ip)
     : client(pNum, ip), renderer(this)
 {
-    workerThread.join();
+    isRunning = true;
     workerThread = std::thread(
         [this]()
         {
             OnGameStart();
-            if (renderer.Construct(256, 240, 4, 4))
+            if (renderer.Construct(1024, 800, 1, 1))
             {
                 renderer.Start();
                 std::cout << "started game\n";
@@ -20,21 +23,60 @@ C_game::C_game(uint16_t pNum, const char* ip)
 
         }
     );
+    consoleThread = std::thread(&C_game::ProcessCommands,this);
 }
 
-bool tmpbool = true;
-
-void C_game::tick(float ElapsedTime)
+//it only works for strings sized 1
+std::vector<std::string> splitString(std::string& s,const char* splitchar)
 {
-    //Read messages and sync with the server
-    if (tmpbool)
+    std::size_t splitpoint = s.find(splitchar);
+    std::size_t oldpoint = -1;
+    std::vector<std::string> splitVec;
+    while (splitpoint != std::string::npos)
     {
-        auto messages = client.connection->inqueue.GetDeque();
-        for (auto& m : messages)
+        splitVec.push_back(std::string(s.begin() + oldpoint + 1,s.begin() + splitpoint));
+        oldpoint = splitpoint;
+        splitpoint = s.find(splitchar,splitpoint);
+    }
+    return splitVec;
+}
+
+void C_game::ProcessCommands()
+{
+    std::cout << isRunning << "aaaaaaaaaaaaaaaaaabb\n";
+    while (isRunning)
+    {
+        std::string commandRaw;
+        std::cout << "aaaaaaaaaaaaaaaaaa\n";
+        std::cin >> commandRaw;
+
+        std::vector<std::string> splited = splitString(commandRaw," ");
+        for(auto& sp : splited)
+            std::cout << sp << '\n';
+        if (splited.size())
         {
-            ProcessMessage(std::move(m), 0);
+            try
+            {
+                commands[splited[0]](*this, std::move(splited));
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
     }
+}
+
+void C_game::tick(float deltaT)
+{
+    //Read messages and sync with the server
+
+    auto messages = client.connection->inqueue.GetDeque();
+    for (auto& m : messages)
+    {
+        ProcessMessage(std::move(m), 0);
+    }
+
     //
 
     //Run the Game logic
@@ -47,16 +89,18 @@ void C_game::tick(float ElapsedTime)
             //tmpbool = false;
             Entity& player = *playerit;
             MovePlayer(player);
-            player.transform.collider.cord +=
-                player.transform.velocity * ElapsedTime;
-            client.connection->Send(S_EntityMoved(playerEntityID, player));
+            simulatePhysics(Entities, deltaT, player);
+
+            //std::cout << player.transform.velocity.ToString() << '\n';
+            //client.connection->Send(S_EntityMoved(playerEntityID, player));
         }
     }
     //
 
     //Write messages and sync with Server
-
-
+    std::vector<Message> Messages;
+    SyncEntity(Messages);
+    client.connection->Send(Messages);
     //
 }
 
@@ -65,12 +109,14 @@ void C_game::OnGameStart()
     clientID = client.ClientID;
     auto entity = std::make_unique<Entity>();
     entity->transform.isServerSide = false;
-    client.getConnection().Send(S_Ping());
-    //entity->getComponent<TestComponent>();
+    entity->transform.collider.size = Vector2(2, 2);
+    entity->transform.drag = 0.4f;
+    entity->transform.setMass(2);
+    entity->didMove = true;
+    entity->getComponent<TestComponent>();
     client.getConnection().Send(S_RequestEntitySpawn(std::move(entity),
         [this](Entity& e, int entityID)
         {
-            //std::cout << "aaa\n";
             setPlayer(entityID);
             //e.transform.collider.cord.x += 5;
         }));
@@ -78,31 +124,30 @@ void C_game::OnGameStart()
 
 void C_game::MovePlayer(Entity& player)
 {
-    float speed = 5;
     if (renderer.GetKey(olc::Key::A).bHeld)
     {
-        player.transform.velocity.x = -speed;
+        player.transform.staticForces.x = -speed;
     }
     else if (renderer.GetKey(olc::Key::D).bHeld)
     {
-        player.transform.velocity.x = speed;
+        player.transform.staticForces.x = speed;
     }
     else
     {
-        player.transform.velocity.x = 0;
+        player.transform.staticForces.x = 0;
     }
 
     if (renderer.GetKey(olc::Key::W).bHeld)
     {
-        player.transform.velocity.y = -speed;
+        player.transform.staticForces.y = -speed;
     }
     else if (renderer.GetKey(olc::Key::S).bHeld)
     {
-        player.transform.velocity.y = speed;
+        player.transform.staticForces.y = speed;
     }
     else
     {
-        player.transform.velocity.y = 0;
+        player.transform.staticForces.y = 0;
     }
 }
 
@@ -113,6 +158,7 @@ void C_game::stop() // Stops the game engie
     isStopped = true;
     isRunning = false;
     workerThread.join();
+    consoleThread.detach();
     client.Stop();
 }
 
@@ -174,15 +220,27 @@ void C_game::R_ReplyEntityRequest(Message m)
         else
         {
             std::cout << EntityID << " Entity doesn't exist. not executing the function\n";
-            for (auto& e : Entities)
-            {
-                std::cout << e.first << ' ';
-            }
-            std::cout << '\n';
         }
     }
     else
     {
         std::cout << "No function!\n";
+    }
+}
+
+void C_game::R_EntityUpdate(Message m, int ClientID)
+{
+    int entityID = m.pop_front<int>();
+    auto e = findEntity(entityID);
+    if (entityID == playerEntityID)
+    {
+        //preserve position
+        Vector2 pos = e->transform.collider.cord;
+        e->Deserialize(m);
+        e->transform.collider.cord = pos;
+    }
+    else
+    {
+        e->Deserialize(m);
     }
 }

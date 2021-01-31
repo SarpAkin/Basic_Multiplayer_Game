@@ -20,6 +20,7 @@ protected:
 
 protected://functions
 
+    void SyncEntity(std::vector<Message>& MToAll);
 
     //message Handling
     virtual void R_EntitySpawned(Message m, int ClientID);
@@ -31,7 +32,7 @@ protected://functions
     void R_Ping(Message m, int ClientID);
     Message S_Ping();
 
-    void R_EntityUpdate(Message m, int ClientID);
+    virtual void R_EntityUpdate(Message m, int ClientID);
     bool S_EntityUpdate(Message& m,int entityID, Entity& entity);
 
 

@@ -26,6 +26,11 @@ void Component::SerializeAll(std::vector<std::unique_ptr<Component>>& comps,Mess
 			comp->Serialize(m);
 }
 
+void Component::OnSync()
+{
+	
+}
+
 /*[GeneratedField START]*/
 void Component::Serialize(Message& m)
 {
@@ -54,9 +59,13 @@ void Component::DeserializeAll(Entity* e,Message& m)
 		switch(compType)
 		{
 			case componentTypes::TestComponent_:
-			e->getComponent<TestComponent>().Deserialize(m);
-			break;
+			{
+				auto comp = e->getComponent<TestComponent>();
+				comp.Deserialize(m);
+				comp.OnSync();
+				break;
 
+			}
 			default:
 			std::cout << "invalid component Type! " << (int)compType << '\n';
 			return;

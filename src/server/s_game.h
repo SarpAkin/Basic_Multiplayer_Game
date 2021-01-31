@@ -8,10 +8,13 @@
 #include "../shared/game.h"
 #include "server.h"
 
+const int billion = 1000000000;
+
 //Server Side of the game
 class S_game : public Game
 {
 private:
+    uint64_t tickDelay;
     int EntityCounter = 0;
 
     bool isStopped = false;
@@ -45,6 +48,7 @@ protected:
     //Message Overrides
     void R_EntitySpawned(Message m, int ClientID) override;
     void R_EntityMoved(Message m, int ClientID) override;
+    void R_EntityUpdate(Message m, int ClientID) override;
 
     //inlines
     inline std::shared_ptr<Connection> findPlayer(int id)
@@ -60,6 +64,7 @@ protected:
     }
 public:
 
+    S_game(uint32_t tickrate = 64);
     ~S_game();
 
     void start(uint16_t portNum, bool tickAutomaticly = true);

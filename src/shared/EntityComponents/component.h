@@ -19,6 +19,7 @@ protected:
 
 protected:
     Component(Entity*);
+    virtual void OnSync();
 public:
     virtual void Update();
     virtual void Serialize(Message&);

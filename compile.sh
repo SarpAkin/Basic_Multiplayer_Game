@@ -18,5 +18,5 @@ make -f server.mk -j 12 -s
 rm server.mk
 mv *.o automake/server_o_files/
 
-cp client build/client
-cp server build/server
+cp client.out build/client.out
+cp server.out build/server.out

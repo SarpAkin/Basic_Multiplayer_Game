@@ -49,6 +49,7 @@ void simulatePhysics(std::vector<std::pair<int, std::shared_ptr<Entity>>>& entit
 void simulatePhysics(std::vector<std::pair<int, std::shared_ptr<Entity>>>& entities, float deltaT, Entity& player)
 #endif
 {
+    float deltaT_Inverted = 1/ deltaT;
     auto end = entities.end();
     #ifndef CLIENT_SIDE
     for (auto it = entities.begin();it != end;++it)
@@ -68,7 +69,10 @@ void simulatePhysics(std::vector<std::pair<int, std::shared_ptr<Entity>>>& entit
         Vector2 beginPos = current.collider.cord;
 
         Vector2 acceleration = current.velocity * -current.drag + current.staticForces;
-        current.velocity += acceleration * deltaT;
+        //std::cout << acceleration.ToString() << '\n';
+        //std::cout << deltaT << '\n';
+        current.velocity += acceleration * deltaT * 5;
+        //std::cout << current.velocity.ToString() << '\n';
         current.collider.cord += current.velocity * deltaT;
 
         for (auto it_ = entities.begin();it_ != end;++it_)
@@ -76,6 +80,9 @@ void simulatePhysics(std::vector<std::pair<int, std::shared_ptr<Entity>>>& entit
             #ifndef CLIENT_SIDE
 
             if (it == it_)
+                continue;
+            #else
+            if(it_->second.get() == &player)
                 continue;
             #endif
 
@@ -85,6 +92,8 @@ void simulatePhysics(std::vector<std::pair<int, std::shared_ptr<Entity>>>& entit
                 it_->second->didMove = simulateColidingEntity(current, other, deltaT);
             }
         }
+
+        current.velocity = (current.collider.cord - beginPos) * deltaT_Inverted;
 
         if (std::abs(current.velocity.x) < 0.1f)
         {
@@ -96,7 +105,7 @@ void simulatePhysics(std::vector<std::pair<int, std::shared_ptr<Entity>>>& entit
             current.velocity.y = 0;
         }
 
-        if (beginPos == current.collider.cord)
+        if (!(beginPos == current.collider.cord))
         {
             current_e.didMove = true;
         }

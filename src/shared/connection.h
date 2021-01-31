@@ -23,7 +23,9 @@ struct MHeader
 class Connection
 {
 private:
-    std::thread WorkerThread = std::thread([]() {/*do nothing*/});
+    std::thread WorkerThread; //= std::thread([]() {/*do nothing*/});
+    std::condition_variable_any messageWait;
+    std::mutex waitLock;
     asio::io_context* i_cont;
     asio::ip::tcp::socket socket_;
     std::function<void(Message&& dVec)> OnMessageReceive;

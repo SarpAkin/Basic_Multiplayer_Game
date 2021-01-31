@@ -28,7 +28,7 @@ bool Renderer::OnUserUpdate(float fElapsedTime)
     for (auto& p : game->Entities)
     {
         auto& ent = *p.second;
-        DrawRect(LocalCordToScreen(ent.transform.collider.cord), olc::vi2d(1, 1), olc::WHITE);
+        FillRect(LocalCordToScreen(ent.transform.collider.cord), (olc::vf2d)ent.transform.collider.size * TileSize, olc::WHITE);
     }
     //
     game->tick(fElapsedTime);

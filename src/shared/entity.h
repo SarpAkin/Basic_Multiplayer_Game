@@ -63,7 +63,6 @@ public:
     T& getComponent()//returns the spesified component if it doesn't exist creates one and returns it
     {
         static_assert(std::is_base_of<Component,T>::value,"Not a component!\n");
-        std::cout << components.size() << "aaa\n";
         for(auto& c : components)
         {
             T* comp = dynamic_cast<T*>(c.get());

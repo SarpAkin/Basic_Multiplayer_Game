@@ -6,11 +6,10 @@ int main()
 {
     try
     {
-        S_game game;
+        S_game game(64);
         game.start(30020, true);
         std::cin.get();
         game.stop();
-        std::cin.get();
     }
     catch (const std::system_error& e)
     {
